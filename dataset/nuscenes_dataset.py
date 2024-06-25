@@ -6,16 +6,18 @@ import numpy as np
 
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
+from dataset.utils.relationship_extractor import RelationshipExtractor
+
 
 class NuscenesDataset(DatasetInterface):
-    def __init__(self) -> None:
+    def __init__(self, config: dict) -> None:
         # Ego dimensions: https://forum.nuscenes.org/t/dimensions-of-the-ego-vehicle-used-to-gather-data/550
         self.__ego_vehicle_size__ = np.array([1.73, 1.52, 4.08])    # [width, height, length]
-        self.__root_folder__ = '/Data2/datasets/nuscenes/data/sets/nuscenes/'
-        self.nusc = NuScenes(
-            version='v1.0-mini', dataroot=self.__root_folder__, verbose=False)
+        self.__root_folder__ = config['root_folder']
+        self.nusc = NuScenes(version=config['version'], dataroot=self.__root_folder__, verbose=config["verbose"])
         self.sample_token_list = self.load_sample_token_list()
         self.image_token_list, self.image_path_list, self.ego_pose_token_list = self.load_data()
+        self.relationship_extractor = RelationshipExtractor()
 
     def __len__(self) -> int:
         return len(self.sample_token_list)
@@ -41,6 +43,11 @@ class NuscenesDataset(DatasetInterface):
         entities_list = self.convert_annotations(filtered_annotations)
         return entities_list
 
+    def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
+        sg_triplets = self.relationship_extractor.get_all_relationships(
+            self.get_entities(index), self.get_ego_vehicle(index))
+        return sg_triplets
+
     def load_sample_token_list(self) -> List[str]:
         sample_token_list = [s['token'] for s in self.nusc.sample]
         assert len(sample_token_list) > 0, "Error: Database has no samples!"
@@ -53,8 +60,7 @@ class NuscenesDataset(DatasetInterface):
         for token in self.sample_token_list:
             sample = self.nusc.get('sample', token)
             image_token_list.append(sample['data']['CAM_FRONT'])
-            cam_front_data = self.nusc.get(
-                'sample_data', sample['data']['CAM_FRONT'])
+            cam_front_data = self.nusc.get('sample_data', sample['data']['CAM_FRONT'])
             image_path_list.append(self.__root_folder__ + cam_front_data['filename'])
             ego_pose_token_list.append(cam_front_data['ego_pose_token'])
         return (image_token_list, image_path_list, ego_pose_token_list)
@@ -65,8 +71,7 @@ class NuscenesDataset(DatasetInterface):
             # Remove annotations that are not humans or vehicles
             if ann.name.startswith("human") or ann.name.startswith("vehicle"):
                 # Remove annotations with low visibility
-                visibility = int(self.nusc.get(
-                    'sample_annotation', ann.token)['visibility_token'])
+                visibility = int(self.nusc.get('sample_annotation', ann.token)['visibility_token'])
                 if visibility > 2:
                     filtered_annotations.append(ann)
         return filtered_annotations

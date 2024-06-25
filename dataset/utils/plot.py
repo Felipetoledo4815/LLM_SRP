@@ -11,8 +11,12 @@ class ScenePlot:
     def __init__(self) -> None:
         pass
 
-    def render_scene(self, ego_vehicle: EgoVehicle, entities: List[Entity], image_path: str) -> None:
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    def render_scene(self,
+                     ego_vehicle: EgoVehicle,
+                     entities: List[Entity],
+                     image_path: str,
+                     out_path: str = '') -> None:
+        _, axs = plt.subplots(1, 2, figsize=(10, 5))
 
         data = Image.open(image_path)
         axs[0].imshow(data)
@@ -22,7 +26,13 @@ class ScenePlot:
 
         ego_vehicle.render(axs[1], colors=get_color(ego_vehicle.entity_type), linewidth=2)
         self.__clean_legend__(axs[1])
+
         plt.tight_layout()
+
+        if out_path is not None:
+            plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
+        else:
+            plt.show()
 
     def __clean_legend__(self, ax: Axes) -> None:
         # Collect all labels and handles

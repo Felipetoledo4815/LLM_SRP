@@ -164,5 +164,7 @@ cython_debug/
 # Custom
 test.ipynb
 test.py
+run.py
+output.png
 .vscode/
 nuscenes-devkit
