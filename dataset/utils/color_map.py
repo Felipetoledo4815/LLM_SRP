@@ -13,7 +13,7 @@ def get_colormap() -> Dict[str, Tuple[int, int, int]]:
         "bicycle": (220, 20, 60),  # Crimson
         "bus": (255, 127, 80),  # Coral
         "car": (255, 158, 0),  # Orange
-        "construction": (233, 150, 70),  # Darksalmon
+        "construction vehicle": (233, 150, 70),  # Darksalmon
         "emergency vehicle": (255, 215, 0),  # Gold
         "motorcycle": (255, 61, 99),  # Red
         "trailer truck": (255, 140, 0),  # Darkorange

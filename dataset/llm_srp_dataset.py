@@ -7,8 +7,10 @@ import torch
 from dataset.dataset_factory import DatasetFactory
 
 class LLMSRPDataset(Dataset):
-    def __init__(self, datasets: List[str]) -> None:
+    def __init__(self, datasets: List[str], output_format: str = 'default') -> None:
         dataset_factory = DatasetFactory(datasets)
+        #TODO: better naming for output_format
+        self.output_format = output_format
         self.datasets = dataset_factory.get_datasets()
         self.dataset_limits = {}
         self.length = 0
@@ -19,11 +21,13 @@ class LLMSRPDataset(Dataset):
     def __len__(self) -> int:
         return self.length
 
-    def __getitem__(self, index: int) -> Tuple[np.ndarray, List[Tuple[str, str, str]]]:
+    def __getitem__(self, index: int) -> Tuple[np.ndarray | str, List[Tuple[str, str, str]]]:
         dataset_name, index_base = self.__get_dataset_name_and_index_base__(index)
         dataset_index = index - index_base
-        img_path = self.datasets[dataset_name].get_image(dataset_index)
-        img = np.array(Image.open(img_path))
+        img = self.datasets[dataset_name].get_image(dataset_index)
+        #TODO: more elegant way to add this logic?
+        if self.output_format == "load_image":
+            img = np.array(Image.open(img))
         sg_triplets = self.datasets[dataset_name].get_sg_triplets(dataset_index)
         return img, sg_triplets
 
@@ -35,7 +39,7 @@ class LLMSRPDataset(Dataset):
             previous_limit = dataset_length
         raise ValueError(f"Error: Index {index} out of bounds!")
 
-    def collate_fn(self, batch: List[Tuple[np.ndarray, List[Tuple[str, str, str]]]]):
+    def collate_fn(self, batch: List[Tuple[torch.Tensor, List[Tuple[str, str, str]]]]):
         images = torch.stack([torch.tensor(item[0]) for item in batch])
         sg_triplets_lengths = [len(item[1]) for item in batch]
         max_length = max(sg_triplets_lengths)
