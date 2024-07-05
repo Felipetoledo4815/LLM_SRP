@@ -24,5 +24,9 @@ class DatasetInterface(ABC):
         """Returns list of scene graph triplets given an index"""
 
     @abstractmethod
+    def plot_data_point(self, index: int) -> None:
+        """Plot data point given an index"""
+
+    @abstractmethod
     def __len__(self) -> int:
         """Returns length of the dataset"""

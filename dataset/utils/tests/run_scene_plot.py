@@ -9,8 +9,8 @@ def main():
     entities = nuscene.get_entities(0)
     image_path = nuscene.get_image(0)
 
-    scene_plot = ScenePlot()
-    scene_plot.render_scene(ego_vehicle, entities, image_path, out_path="output.png")
+    scene_plot = ScenePlot(field_of_view=nuscene.field_of_view)
+    scene_plot.render_scene(ego_vehicle, entities, image_path)
 
 
 if __name__ == "__main__":

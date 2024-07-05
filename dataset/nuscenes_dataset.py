@@ -7,6 +7,7 @@ import numpy as np
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
 from dataset.utils.relationship_extractor import RelationshipExtractor
+from dataset.utils.plot import ScenePlot
 
 
 class NuscenesDataset(DatasetInterface):
@@ -17,7 +18,9 @@ class NuscenesDataset(DatasetInterface):
         self.nusc = NuScenes(version=config['version'], dataroot=self.__root_folder__, verbose=config["verbose"])
         self.sample_token_list = self.load_sample_token_list()
         self.image_token_list, self.image_path_list, self.ego_pose_token_list = self.load_data()
-        self.relationship_extractor = RelationshipExtractor()
+        self.field_of_view = config['field_of_view']
+        self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
+        self.scene_plot = ScenePlot(field_of_view=self.field_of_view)
 
     def __len__(self) -> int:
         return len(self.sample_token_list)
@@ -72,7 +75,7 @@ class NuscenesDataset(DatasetInterface):
             if ann.name.startswith("human") or ann.name.startswith("vehicle"):
                 # Remove annotations with low visibility
                 visibility = int(self.nusc.get('sample_annotation', ann.token)['visibility_token'])
-                if visibility > 2:
+                if visibility > 3:
                     filtered_annotations.append(ann)
         return filtered_annotations
 
@@ -105,3 +108,9 @@ class NuscenesDataset(DatasetInterface):
         ypr = R.from_euler("zyx", ann.orientation.yaw_pitch_roll)
         entity = Entity(entity_type, ann.center, whl, ypr)
         return entity
+
+    def plot_data_point(self, index: int, out_path: None | str = None) -> None:
+        ego_vehicle = self.get_ego_vehicle(index)
+        entities = self.get_entities(index)
+        image_path = self.get_image(index)
+        self.scene_plot.render_scene(ego_vehicle, entities, image_path, out_path, title=f"Sample {index}")

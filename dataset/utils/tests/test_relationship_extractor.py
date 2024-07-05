@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from unittest.mock import patch
 from scipy.spatial.transform import Rotation as R
 from dataset.utils.relationship_extractor import RelationshipExtractor
 from dataset.utils.data_clases import Entity, EgoVehicle
@@ -42,3 +43,49 @@ class TestRelationshipExtractor(unittest.TestCase):
                 self.assertEqual(discrete_distance_rel, ("car", expectation, "ego"))
             else:
                 self.assertIsNone(discrete_distance_rel)
+
+    @patch('dataset.utils.data_clases.EgoVehicle.get_projected_center_point')
+    @patch('dataset.utils.data_clases.Entity.get_projected_center_point')
+    def test_is_in_field_of_view(self, mock_entity_get_projected_center_point, mock_ego_get_projected_center_point):
+        mock_ego_get_projected_center_point.return_value = np.array([0, 0])
+
+        relationship_extractor = RelationshipExtractor()
+        ego_vehicle = EgoVehicle(
+            xyz=np.array([0, 0, 0]),
+            whl=np.array([0, 0, 0]),
+            ypr=R.from_euler('z', 0, degrees=True)
+        )
+        entity = Entity(
+            entity_type='car',
+            xyz=np.array([0, 0, 0]),
+            whl=np.array([0, 0, 0]),
+            ypr=R.from_euler('z', 0, degrees=True)
+        )
+        for xy, expectation in [([1,1], True), ([-10,-10], False)]:
+            mock_entity_get_projected_center_point.return_value = np.array(xy)
+
+            is_in_fov = relationship_extractor.is_in_field_of_view(entity, ego_vehicle)
+            self.assertEqual(is_in_fov, expectation)
+
+    @patch('dataset.utils.data_clases.EgoVehicle.get_projected_center_point')
+    @patch('dataset.utils.data_clases.Entity.get_projected_center_point')
+    def test_is_in_field_of_view_66(self, mock_entity_get_projected_center_point, mock_ego_get_projected_center_point):
+        mock_ego_get_projected_center_point.return_value = np.array([0, 0])
+
+        relationship_extractor = RelationshipExtractor(field_of_view=66)
+        ego_vehicle = EgoVehicle(
+            xyz=np.array([0, 0, 0]),
+            whl=np.array([0, 0, 0]),
+            ypr=R.from_euler('z', 0, degrees=True)
+        )
+        entity = Entity(
+            entity_type='car',
+            xyz=np.array([0, 0, 0]),
+            whl=np.array([0, 0, 0]),
+            ypr=R.from_euler('z', 0, degrees=True)
+        )
+        for xy, expectation in [([0,1], True), ([100,0], False)]:
+            mock_entity_get_projected_center_point.return_value = np.array(xy)
+
+            is_in_fov = relationship_extractor.is_in_field_of_view(entity, ego_vehicle)
+            self.assertEqual(is_in_fov, expectation)

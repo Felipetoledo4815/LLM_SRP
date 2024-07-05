@@ -8,7 +8,7 @@ def main():
     ego_vehicle = nuscene.get_ego_vehicle(0)
     entities = nuscene.get_entities(0)
 
-    rel_extractor = RelationshipExtractor()
+    rel_extractor = RelationshipExtractor(nuscene.field_of_view)
     relationships = rel_extractor.get_all_relationships(entities, ego_vehicle)
     print(relationships)
 
