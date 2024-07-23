@@ -120,3 +120,9 @@ class NuscenesDataset(DatasetInterface):
         entities = self.get_entities(index)
         image_path = self.get_image(index)
         self.scene_plot.render_scene(ego_vehicle, entities, image_path, out_path, title=f"Sample {index}")
+
+    def plot_bounding_box(self, index: int, bbs: List[str], entities: List[str] | None = None,
+                          out_path: None | str = None) -> None:
+        image_path = self.get_image(index)
+        self.scene_plot.plot_2d_bounding_boxes_from_corners(bbs=bbs, image_path=image_path,
+                                                            out_path=out_path, entity_types=entities)

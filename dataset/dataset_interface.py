@@ -28,8 +28,13 @@ class DatasetInterface(ABC):
         """Returns bounding box and scene graph triplets given an index"""
 
     @abstractmethod
-    def plot_data_point(self, index: int) -> None:
+    def plot_data_point(self, index: int, out_path: None | str = None) -> None:
         """Plot data point given an index"""
+
+    @abstractmethod
+    def plot_bounding_box(self, index: int, bbs: List[str], entities: List[str] | None = None,
+                          out_path: None | str = None) -> None:
+        """Plot bounding box given an index, and bounding boxes"""
 
     @abstractmethod
     def __len__(self) -> int:

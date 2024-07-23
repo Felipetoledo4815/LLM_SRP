@@ -1,6 +1,6 @@
 from typing import List, Tuple
-import numpy as np
 import math
+import numpy as np
 from dataset.utils.data_clases import Entity, EgoVehicle, RelationshipType
 
 
@@ -32,7 +32,7 @@ class RelationshipExtractor:
                 relationships.append(discrete_distance_rel)
                 relative_position_rel = self.get_relative_position_rel(entity, ego_vehicle)
                 relationships.append(relative_position_rel)
-            all_relationships.append((str(entity.get_2d_bounding_box()), relationships))
+                all_relationships.append((str(entity.get_2d_bounding_box()), relationships))
         return all_relationships
 
     def is_in_field_of_view(self, entity: Entity, ego_vehicle: EgoVehicle) -> bool:

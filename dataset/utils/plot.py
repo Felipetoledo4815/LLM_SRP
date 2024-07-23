@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from matplotlib.axes import Axes
-from matplotlib.patches import Arc
-from dataset.utils.data_clases import Entity, EgoVehicle
+from matplotlib import patches
+from dataset.utils.data_clases import Entity, EgoVehicle, EntityType
 
 
 class ScenePlot:
@@ -85,13 +85,13 @@ class ScenePlot:
             end_angle = math.degrees(orientation + half_fov)  # End angle in degrees
 
             # Create and add the arc to the plot
-            arc = Arc((center_x, center_y), 2*arc_radius, 2*arc_radius,
-                      angle=0, theta1=start_angle, theta2=end_angle, edgecolor='r', linestyle=':', lw=2)
+            arc = patches.Arc((center_x, center_y), 2*arc_radius, 2*arc_radius,
+                              angle=0, theta1=start_angle, theta2=end_angle, edgecolor='r', linestyle=':', lw=2)
             ax.add_patch(arc)
 
     def plot_2d_bounding_boxes(self, entities: List[Entity], image_path: str, out_path: None | str = None,
                                title: None | str = None) -> None:
-        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
 
         data = Image.open(image_path)
         data_array = np.array(data)
@@ -109,3 +109,52 @@ class ScenePlot:
             plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
         else:
             plt.show()
+
+    def plot_2d_bounding_boxes_from_corners(self, bbs: List[str], image_path: str,
+                                            out_path: None | str = None,
+                                            title: None | str = None,
+                                            entity_types: List[str] | None = None) -> None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+
+        data = Image.open(image_path)
+        data_array = np.array(data)
+        ax.imshow(data_array)
+
+        if entity_types is None:
+            for bb in bbs:
+                self.__render_bounding_box_from_corners(bb, ax, linewidth=1)
+        else:
+            for bb, entity_type in zip(bbs, entity_types):
+                self.__render_bounding_box_from_corners(bb, ax, entity_type, linewidth=1)
+
+        if title is not None:
+            fig.suptitle(title)
+        plt.tight_layout()
+
+        if out_path is not None:
+            plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
+        else:
+            plt.show()
+
+    def __render_bounding_box_from_corners(self, bb: str, axis: Axes,
+                                           entity_type: str | None = None,
+                                           linewidth: float = 1) -> None:
+        """
+        Renders the bounding box in the provided Matplotlib axis.
+        :param bb: Bounding box in the format '(x1, y1, x2, y2)'.
+        :param axis: Axis onto which the box should be drawn.
+        :param entity_type: Type of the entity to retrieve its color.
+        :param linewidth: Width in pixel of the box sides.
+        """
+        bb_list = bb.strip('()').split(',')
+        bb_int_list = tuple(int(x) for x in bb_list)
+        bottom_left = bb_int_list[0], bb_int_list[1]
+        width = bb_int_list[2] - bb_int_list[0]
+        height = bb_int_list[3] - bb_int_list[1]
+
+        color = np.array([0, 0, 0])
+        if entity_type is not None:
+            color = EntityType.from_str(entity_type).color
+
+        rect1 = patches.Rectangle(bottom_left, width, height, linewidth=linewidth, edgecolor=color, facecolor='none')
+        axis.add_patch(rect1)

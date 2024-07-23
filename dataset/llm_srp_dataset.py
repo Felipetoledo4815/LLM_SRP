@@ -89,10 +89,16 @@ class LLMSRPDataset(Dataset):
             padded_sg_triplets.append(sg_triplets)
         return images, padded_sg_triplets
 
-    def plot_data_point(self, index: int) -> None:
+    def plot_data_point(self, index: int, out_path: None | str = None) -> None:
         dataset_name, index_base = self.__get_dataset_name_and_index_base__(index)
         dataset_index = index - index_base
-        self.datasets[dataset_name].plot_data_point(dataset_index)
+        self.datasets[dataset_name].plot_data_point(dataset_index, out_path)
+
+    def plot_bounding_box(self, index: int, bbs: List[str], entity_types: List[str],
+                          out_path: None | str = None) -> None:
+        dataset_name, index_base = self.__get_dataset_name_and_index_base__(index)
+        dataset_index = index - index_base
+        self.datasets[dataset_name].plot_bounding_box(dataset_index, bbs, entity_types, out_path)
 
     def get_dataset_names(self) -> List[str]:
         return list(self.datasets.keys())

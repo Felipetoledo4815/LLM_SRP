@@ -1,8 +1,8 @@
-from typing import Tuple
-from scipy.spatial.transform import Rotation as R
-from matplotlib.axes import Axes
-from matplotlib import patches
+from typing import Tuple, List
 from enum import Enum, auto
+from scipy.spatial.transform import Rotation as R
+from matplotlib import patches
+from matplotlib.axes import Axes
 import numpy as np
 
 
@@ -19,19 +19,19 @@ class EntityType(Enum):
     EGO = (0, 0, 0)  # Black
 
     @property
-    def color(self):
-        return self.value
+    def color(self) -> np.ndarray:
+        return np.array(self.value) / 255.0
 
     @property
-    def type_name(self):
+    def type_name(self) -> str:
         return self.name.lower()
 
     @classmethod
-    def get_types(cls):
+    def get_types(cls) -> List[str]:
         return [name.lower() for name, _ in cls.__members__.items()]
 
     @classmethod
-    def from_str(cls, entity_type: str):
+    def from_str(cls, entity_type: str) -> 'EntityType':
         assert entity_type in cls.get_types(), f"Entity {entity_type} not recognized. Please add it to EntityType."
         return cls[entity_type.upper()]
 
@@ -45,15 +45,15 @@ class RelationshipType(Enum):
     TO_RIGHT_OF = auto()
 
     @property
-    def type_name(self):
+    def type_name(self) -> str:
         return self.name.lower()
 
     @classmethod
-    def get_types(cls):
+    def get_types(cls) -> List[str]:
         return [name.lower() for name, _ in cls.__members__.items()]
 
     @classmethod
-    def from_str(cls, relationship_type: str):
+    def from_str(cls, relationship_type: str) -> 'RelationshipType':
         assert relationship_type in cls.get_types(
         ), f"Relationship {relationship_type} not recognized. Please add it to RelationshipType."
         return cls[relationship_type.upper()]
@@ -108,7 +108,7 @@ class Entity:
 
     def render(self,
                axis: Axes,
-               colors: Tuple = ('b', 'r', 'k'),
+               colors: np.ndarray,
                linewidth: float = 2) -> None:
         """
         Renders the box in the provided Matplotlib axis.
@@ -137,7 +137,7 @@ class Entity:
                   [center_bottom[2], center_bottom_forward[2]],
                   color=colors, linewidth=linewidth)
 
-    def render_bounding_box(self, axis: Axes, colors: Tuple = ('b', 'r', 'k'), linewidth: float = 1) -> None:
+    def render_bounding_box(self, axis: Axes, colors: np.ndarray, linewidth: float = 1) -> None:
         """
         Renders the bounding box in the provided Matplotlib axis.
         :param axis: Axis onto which the box should be drawn.
@@ -198,7 +198,7 @@ class Entity:
 
         return points
 
-    def get_2d_bounding_box(self) -> Tuple[float, float, float, float]:
+    def get_2d_bounding_box(self) -> Tuple[int, int, int, int]:
         """
         Returns the 2D bounding box of the entity.
         """
@@ -206,9 +206,13 @@ class Entity:
         bottom_left = min(corners[0]), min(corners[1])
         top_right = max(corners[0]), max(corners[1])
 
-        return bottom_left + top_right
+        all_corners = bottom_left + top_right
+        all_corners_int = tuple(int(x) for x in all_corners)
+        assert len(all_corners_int) == 4, "Error: Bounding box must have 4 coordinates!"
 
-    def get_color(self) -> Tuple[int, int, int]:
+        return all_corners_int
+
+    def get_color(self) -> np.ndarray:
         """
         Returns the color of the entity.
         """
