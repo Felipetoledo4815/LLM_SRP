@@ -1,7 +1,7 @@
 from typing import List, Tuple
 import numpy as np
 import math
-from dataset.utils.data_clases import Entity, EgoVehicle
+from dataset.utils.data_clases import Entity, EgoVehicle, RelationshipType
 
 
 class RelationshipExtractor:
@@ -19,6 +19,21 @@ class RelationshipExtractor:
                 relative_position_rel = self.get_relative_position_rel(entity, ego_vehicle)
                 relationships.append(relative_position_rel)
         return relationships
+
+    def get_all_bb_relationships(self, entities: List[Entity],
+                                 ego_vehicle: EgoVehicle) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
+        all_relationships = []
+        for entity in entities:
+            if not self.is_in_field_of_view(entity, ego_vehicle):
+                continue
+            relationships = []
+            discrete_distance_rel = self.get_discrete_distance_rel(entity, ego_vehicle)
+            if discrete_distance_rel:
+                relationships.append(discrete_distance_rel)
+                relative_position_rel = self.get_relative_position_rel(entity, ego_vehicle)
+                relationships.append(relative_position_rel)
+            all_relationships.append((str(entity.get_2d_bounding_box()), relationships))
+        return all_relationships
 
     def is_in_field_of_view(self, entity: Entity, ego_vehicle: EgoVehicle) -> bool:
         # Extract the position of the entity and the ego vehicle
@@ -47,15 +62,19 @@ class RelationshipExtractor:
         return distance.item()
 
     def get_discrete_distance_rel(self, entity: Entity, ego_vehicle: EgoVehicle) -> Tuple[str, str, str] | None:
+        """
+        Returns a tuple with the relationship between the entity and the ego vehicle based on the distance between them.
+        Distances are divided into three categories based on stopping distances by driving speed.
+        https://www.dmv.virginia.gov/sites/default/files/forms/dmv39d.pdf
+        """
         distance = self.get_distance(entity, ego_vehicle)
-        if distance <= 10:
-            return (entity.entity_type, 'within_10m', ego_vehicle.entity_type)
-        if distance <= 25:
-            return (entity.entity_type, 'between_10m_and_25m', ego_vehicle.entity_type)
-        if distance <= 50:
-            return (entity.entity_type, 'between_25m_and_50m', ego_vehicle.entity_type)
-        else:
-            return None
+        if distance <= 25:  # Speed 25 mph
+            return (entity.entity_type, RelationshipType.WITHIN_25M.type_name, ego_vehicle.entity_type)
+        if distance <= 40:  # Speed 35 mph
+            return (entity.entity_type, RelationshipType.BETWEEN_25M_AND_40M.type_name, ego_vehicle.entity_type)
+        if distance <= 60:  # Speed 45 mph
+            return (entity.entity_type, RelationshipType.BETWEEN_40M_AND_60M.type_name, ego_vehicle.entity_type)
+        return None
 
     def get_relative_position_rel(self, entity: Entity, ego_vehicle: EgoVehicle) -> Tuple[str, str, str]:
         # Calculate slope starting from 90 since camera is centered
@@ -64,9 +83,9 @@ class RelationshipExtractor:
         entity_center = entity.get_projected_center_point()
         # Check if entity is in front of ego vehicle
         if entity_center[1] >= abs(entity_center[0]) * slope:
-            return (entity.entity_type, 'inFrontOf', ego_vehicle.entity_type)
+            return (entity.entity_type, RelationshipType.IN_FRONT_OF.type_name, ego_vehicle.entity_type)
         # Check if entity is to the left of ego vehicle
         if entity_center[0] < 0:
-            return (entity.entity_type, 'toLeftOf', ego_vehicle.entity_type)
+            return (entity.entity_type, RelationshipType.TO_LEFT_OF.type_name, ego_vehicle.entity_type)
         # Entity has to be to the left of ego vehicle
-        return (entity.entity_type, 'toRightOf', ego_vehicle.entity_type)
+        return (entity.entity_type, RelationshipType.TO_RIGHT_OF.type_name, ego_vehicle.entity_type)

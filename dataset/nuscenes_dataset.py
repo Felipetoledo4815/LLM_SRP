@@ -43,13 +43,18 @@ class NuscenesDataset(DatasetInterface):
     def get_entities(self, index: int) -> List[Entity]:
         annotation = self.nusc.get_sample_data(self.image_token_list[index])
         filtered_annotations = self.filter_annotations(annotation[1])
-        entities_list = self.convert_annotations(filtered_annotations)
+        entities_list = self.convert_annotations(filtered_annotations, annotation[2])
         return entities_list
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         sg_triplets = self.relationship_extractor.get_all_relationships(
             self.get_entities(index), self.get_ego_vehicle(index))
         return sg_triplets
+
+    def get_bb_triplets(self, index: int) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
+        bb_triplets = self.relationship_extractor.get_all_bb_relationships(
+            self.get_entities(index), self.get_ego_vehicle(index))
+        return bb_triplets
 
     def load_sample_token_list(self) -> List[str]:
         sample_token_list = [s['token'] for s in self.nusc.sample]
@@ -79,14 +84,15 @@ class NuscenesDataset(DatasetInterface):
                     filtered_annotations.append(ann)
         return filtered_annotations
 
-    def convert_annotations(self, annotations: List[Box]) -> List[Entity]:
+    def convert_annotations(self, annotations: List[Box], camera_intrinsic: np.ndarray = np.eye(3)) -> List[Entity]:
         llmsrp_annotations = []
         for ann in annotations:
-            llmsrp_annotations.append(self.box2entity(ann))
+            llmsrp_annotations.append(self.box2entity(ann, camera_intrinsic))
         return llmsrp_annotations
 
-    def box2entity(self, ann: Box) -> Entity:
+    def box2entity(self, ann: Box, camera_intrinsic: np.ndarray = np.eye(3)) -> Entity:
         entity_type = None
+        # TODO: Define a mapper for the entity types
         if ann.name.startswith("human"):
             entity_type = "person"
         elif ann.name.startswith("vehicle"):
@@ -106,7 +112,7 @@ class NuscenesDataset(DatasetInterface):
         whl = np.array([w, h, l])
         # Convert the quaternion to euler angles
         ypr = R.from_euler("zyx", ann.orientation.yaw_pitch_roll)
-        entity = Entity(entity_type, ann.center, whl, ypr)
+        entity = Entity(entity_type, ann.center, whl, ypr, camera_intrinsic)
         return entity
 
     def plot_data_point(self, index: int, out_path: None | str = None) -> None:

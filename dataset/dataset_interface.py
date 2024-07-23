@@ -24,6 +24,10 @@ class DatasetInterface(ABC):
         """Returns list of scene graph triplets given an index"""
 
     @abstractmethod
+    def get_bb_triplets(self, index: int) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
+        """Returns bounding box and scene graph triplets given an index"""
+
+    @abstractmethod
     def plot_data_point(self, index: int) -> None:
         """Plot data point given an index"""
 

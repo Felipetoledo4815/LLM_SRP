@@ -167,4 +167,5 @@ test.py
 run.py
 output.png
 .vscode/
+.env
 nuscenes-devkit

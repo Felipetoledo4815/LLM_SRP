@@ -31,7 +31,7 @@ class TestRelationshipExtractor(unittest.TestCase):
             whl=np.array([0, 0, 0]),
             ypr=R.from_euler('z', 0, degrees=True)
         )
-        for i, expectation in [(1, "very_near"), (10, "near"), (20, "visible"), (1000, None)]:
+        for i, expectation in [(1, "within_25m"), (25, "between_25m_and_40m"), (40, "between_40m_and_60m"), (1000, None)]:
             entity = Entity(
                 entity_type='car',
                 xyz=np.array([i, i, i]),

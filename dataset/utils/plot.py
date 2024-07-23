@@ -1,12 +1,11 @@
 from typing import List
+import math
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 from matplotlib.axes import Axes
 from matplotlib.patches import Arc
-import matplotlib.pyplot as plt
-import math
-
 from dataset.utils.data_clases import Entity, EgoVehicle
-from dataset.utils.color_map import get_color
 
 
 class ScenePlot:
@@ -22,9 +21,9 @@ class ScenePlot:
         axs[0].imshow(data)
 
         for entity in entities:
-            entity.render(axs[1], colors=get_color(entity.entity_type), linewidth=2)
+            entity.render(axs[1], colors=entity.get_color(), linewidth=2)
 
-        ego_vehicle.render(axs[1], colors=get_color(ego_vehicle.entity_type), linewidth=2)
+        ego_vehicle.render(axs[1], colors=ego_vehicle.get_color(), linewidth=2)
         self.__plot_fov__(axs[1], ego_vehicle)
         self.__clean_legend__(axs[1])
 
@@ -65,7 +64,7 @@ class ScenePlot:
         third_fov = math.radians(self.field_of_view / 3 / 2)
 
         # Distance for the FOV lines from the center point
-        distance = 50  # Adjust as needed
+        distance = 60  # Adjust as needed
 
         for angle, color in [(half_fov, 'r--'), (third_fov, 'g--')]:
             # Calculate direction of the left FOV line
@@ -80,12 +79,33 @@ class ScenePlot:
             ax.plot([center_x, left_fov_x], [center_y, left_fov_y], color)  # Left FOV line
             ax.plot([center_x, right_fov_x], [center_y, right_fov_y], color)  # Right FOV line
 
-        for arc_radius in [10, 25, 50]:
+        for arc_radius in [25, 40, 60]:  # Radius based on distance thresholds
             # Arc parameters
             start_angle = math.degrees(orientation - half_fov)  # Start angle in degrees
             end_angle = math.degrees(orientation + half_fov)  # End angle in degrees
 
             # Create and add the arc to the plot
             arc = Arc((center_x, center_y), 2*arc_radius, 2*arc_radius,
-                    angle=0, theta1=start_angle, theta2=end_angle, edgecolor='r', linestyle=':', lw=2)
+                      angle=0, theta1=start_angle, theta2=end_angle, edgecolor='r', linestyle=':', lw=2)
             ax.add_patch(arc)
+
+    def plot_2d_bounding_boxes(self, entities: List[Entity], image_path: str, out_path: None | str = None,
+                               title: None | str = None) -> None:
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+
+        data = Image.open(image_path)
+        data_array = np.array(data)
+        ax.imshow(data_array)
+
+        for entity in entities:
+            print(entity.entity_type)
+            entity.render_bounding_box(ax, colors=entity.get_color(), linewidth=1)
+
+        if title is not None:
+            fig.suptitle(title)
+        plt.tight_layout()
+
+        if out_path is not None:
+            plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
+        else:
+            plt.show()

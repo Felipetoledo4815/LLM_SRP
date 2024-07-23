@@ -5,7 +5,7 @@ from dataset.dataset_factory import DatasetFactory
 class TestDatasetFactory(unittest.TestCase):
 
     def test_dataset_factory(self):
-        dataset_factory = DatasetFactory(["nuscenes"])
+        dataset_factory = DatasetFactory(["nuscenes"], configs={"nuscenes": "nuscenes_mini"})
         datasets = dataset_factory.get_datasets()
         self.assertEqual(len(datasets), 1)
         self.assertTrue("nuscenes" in datasets)
