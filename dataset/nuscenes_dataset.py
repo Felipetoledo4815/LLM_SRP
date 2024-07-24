@@ -98,11 +98,11 @@ class NuscenesDataset(DatasetInterface):
         elif ann.name.startswith("vehicle"):
             vehicle_type = ann.name.split(".")[1]
             if vehicle_type == "construction":
-                entity_type = "construction vehicle"
+                entity_type = "construction_vehicle"
             elif vehicle_type == "emergency":
-                entity_type = "emergency vehicle"
+                entity_type = "emergency_vehicle"
             elif vehicle_type == "trailer":
-                entity_type = "trailer truck"
+                entity_type = "trailer_truck"
             else:
                 entity_type = vehicle_type
         else:
