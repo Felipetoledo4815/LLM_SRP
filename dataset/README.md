@@ -1,7 +1,11 @@
 # LLM_SRP
 
-## Getting started
+## Download datasets
+### NuScenes
+Download Nuscenes from https://www.nuscenes.org/nuscenes. You will need to create an account. To get started just download the mini partition and set it up by following: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/tutorials/nuscenes_tutorial.ipynb.
 
+
+## Getting started
 1. Create a local `.env` file on the root of the repository containing the following variables:
 ```bash
 NUSCENES_MINI=/path/to/nuscenes_mini
