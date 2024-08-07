@@ -1,16 +1,36 @@
 # LLM_SRP
 
-## Get started
-1. Download Nuscenes from https://www.nuscenes.org/nuscenes. You will need to create an account. To get started just download the mini partition and set it up by following: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/tutorials/nuscenes_tutorial.ipynb.
-2. Create a conda environment and install the requirements by running:
+## Download datasets
+Please follow the instructions in this [README](./dataset/README.md).
+
+## Getting started
+1. Create a local `.env` file on the root of the repository containing the following variables:
 ```bash
-conda env create -n llm_srp
-conda activate llm_srp
-pip install -r requirements.txt
-```
-3. Create a `.env` file in the root directory and add the following according to what partition you want to use:
-```
 NUSCENES_MINI=/path/to/nuscenes_mini
 NUSCENES=/path/to/nuscenes
 ```
-4. Explore the dataset using the `explore_llm_srp.ipynb` notebook.
+2. Create a conda environment with the following command:
+```bash
+conda create -n llm_srp python=3.10
+```
+3. Activate the conda environment:
+```bash
+conda activate llm_srp
+```
+4. Install all packages in the requirements.txt file:
+```bash
+pip install -r requirements.txt
+```
+
+## Exploring the dataset
+- If you want to have a quick overview of the dataset, you can use the jupyter-notebook called `explore_llm_srp.ipynb`.
+- To execute minimal versions of different scripts in this repository, execute the following command from the root of the repository:
+```bash
+python -m dataset.utils.tests.run_scene_plot
+```
+
+## Installing the package
+If you want to install the package to use it in other projects, you can run the following command from the root of the repository:
+```bash
+pip install -e .
+```
