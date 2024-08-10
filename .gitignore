@@ -168,4 +168,5 @@ run.py
 output.png
 .vscode/
 .env
+.llm_srp
 nuscenes-devkit

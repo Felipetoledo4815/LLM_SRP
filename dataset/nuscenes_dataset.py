@@ -14,7 +14,8 @@ class NuscenesDataset(DatasetInterface):
     def __init__(self, config: dict) -> None:
         # Ego dimensions: https://forum.nuscenes.org/t/dimensions-of-the-ego-vehicle-used-to-gather-data/550
         self.__ego_vehicle_size__ = np.array([1.73, 1.52, 4.08])    # [width, height, length]
-        self.__root_folder__ = config['root_folder']
+        self.__root_folder__ = config['root_folder'] if config['root_folder'].endswith(
+            '/') else config['root_folder'] + '/'
         self.nusc = NuScenes(version=config['version'], dataroot=self.__root_folder__, verbose=config["verbose"])
         self.sample_token_list = self.load_sample_token_list()
         self.image_token_list, self.image_path_list, self.ego_pose_token_list = self.load_data()

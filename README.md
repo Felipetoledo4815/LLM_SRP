@@ -6,8 +6,8 @@ Please follow the instructions in this [README](./dataset/README.md).
 ## Getting started
 1. Create a local `.env` file on the root of the repository containing the following variables:
 ```bash
-NUSCENES_MINI=/path/to/nuscenes_mini
-NUSCENES=/path/to/nuscenes
+NUSCENES_MINI=/path/to/nuscenes_mini/
+NUSCENES=/path/to/nuscenes/
 ```
 2. Create a conda environment with the following command:
 ```bash
