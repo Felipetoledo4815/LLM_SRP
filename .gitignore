@@ -170,3 +170,4 @@ output.png
 .env
 .llm_srp
 nuscenes-devkit
+path/

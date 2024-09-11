@@ -27,6 +27,7 @@ class NuscenesDataset(DatasetInterface):
         return len(self.sample_token_list)
 
     def get_image(self, index: int) -> str:
+        print(self.image_path_list[index])
         return self.image_path_list[index]
 
     def get_ego_vehicle(self, index: int) -> EgoVehicle:
@@ -43,6 +44,10 @@ class NuscenesDataset(DatasetInterface):
 
     def get_entities(self, index: int) -> List[Entity]:
         annotation = self.nusc.get_sample_data(self.image_token_list[index])
+        print("////////////////////////////////////////")
+        print(self.image_token_list[index])
+        print(annotation)
+        print("////////////////////////////////////////")
         filtered_annotations = self.filter_annotations(annotation[1])
         entities_list = self.convert_annotations(filtered_annotations, annotation[2])
         return entities_list

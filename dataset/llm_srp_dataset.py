@@ -69,7 +69,10 @@ class LLMSRPDataset(Dataset):
                                                List[Tuple[str, str, str]],
                                                List[Tuple[str, List[Tuple[str, str, str]]]]]:
         index = self.indices[index]
+        print("in get item*************************************************")
+        print(index)
         dataset_name, index_base = self.__get_dataset_name_and_index_base__(index)
+        print(dataset_name, index_base)
         dataset_index = index - index_base
         img = self.datasets[dataset_name].get_image(dataset_index)
         if self.output_format[0] == ImageFormat.NP_ARRAY:
