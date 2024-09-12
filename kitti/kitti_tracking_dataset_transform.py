@@ -80,7 +80,7 @@ def get_labels_for_image(list_of_labels, img):
     for label in list_of_labels:
         d = label.split()
         id = d[0].zfill(6)
-        if id == img and d[2] != 'DontCare' and d[4] == '0': #d[4] ==  '0' is considering only fully visible objects
+        if id == img and d[2] != 'DontCare':
             print(id)
             obj = {
                 'name': d[2],
@@ -96,7 +96,8 @@ def get_labels_for_image(list_of_labels, img):
                     'length': d[12]
                 },
                 'location': [d[13], d[14], d[15]],
-                'rotating_y': d[16]
+                'rotating_y': d[16],
+                'visibility': d[4]
             }
             img_label.append(obj)
     return img_label

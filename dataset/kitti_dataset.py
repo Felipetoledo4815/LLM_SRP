@@ -44,13 +44,21 @@ class KittiDataset(DatasetInterface):
         return ego_vehicle
     def get_entities(self, index: int) -> List[Entity]:
         annotations = self.kitti_data[index]
-        list_of_entities = self.convert_annotations(annotations)
+        filtered_image_label = self.get_filtered_image_label(annotations)
+        list_of_entities = self.convert_annotations(filtered_image_label, annotations['camera_intrinsics'])
         return list_of_entities
 
-    def convert_annotations(self, annotations: {}) -> List[Entity]:
-        llmsrp_annotations = []
+    def get_filtered_image_label(self, annotations):
+        filtered_image_label = []
         for ann in annotations['image_label']:
-            llmsrp_annotations.append(self.data2entity(ann, numpy.array(annotations['camera_intrinsics'])))
+            if ann['visibility'] == '0': # ann['visibility'] ==  '0' is considering only fully visible objects
+                filtered_image_label.append(ann)
+        return filtered_image_label
+
+    def convert_annotations(self, image_labels: [], camera_intrinsics) -> List[Entity]:
+        llmsrp_annotations = []
+        for ann in image_labels:
+            llmsrp_annotations.append(self.data2entity(ann, numpy.array(camera_intrinsics)))
         return llmsrp_annotations
 
     def data2entity(self, ann: {}, camera_intrinsic: numpy.ndarray = numpy.eye(3)) -> Entity:
