@@ -32,7 +32,7 @@ class EntityType(Enum):
 
     @classmethod
     def from_str(cls, entity_type: str) -> 'EntityType':
-        assert entity_type in cls.get_types(), f"Entity {entity_type} not recognized. Please add it to EntityType."
+        assert entity_type.lower() in cls.get_types(), f"Entity {entity_type} not recognized. Please add it to EntityType."
         return cls[entity_type.upper()]
 
 
@@ -104,7 +104,7 @@ class Entity:
         Returns the four bottom corners.
         :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
         """
-        return self.corners()[:, [0, 1, 5, 4]]
+        return self.corners()[:, [2, 3, 7, 6]]
 
     def render(self,
                axis: Axes,
@@ -118,23 +118,15 @@ class Entity:
         :param linewidth: Width in pixel of the box sides.
         """
         bottom_corners = self.bottom_corners()
-
-        def draw_rect(selected_corners, color):
-            prev = selected_corners[-1]
-            for corner in selected_corners:
-                axis.plot(
-                    [prev[0], corner[0]],
-                    [prev[2], corner[2]],
-                    color=color, linewidth=linewidth, label=self.entity_type)
-                prev = corner
-
-        draw_rect(bottom_corners.T, colors)
+        polygon = patches.Polygon(bottom_corners[:2,:].T, closed=True, linewidth=1, edgecolor=colors,
+                                  facecolor=(1.0, 1.0, 1.0, 0.0), label=self.entity_type)
+        axis.add_patch(polygon)
 
         # Draw line indicating the front
         center_bottom_forward = np.mean(bottom_corners.T[0:2], axis=0)
         center_bottom = np.mean(bottom_corners.T, axis=0)
         axis.plot([center_bottom[0], center_bottom_forward[0]],
-                  [center_bottom[2], center_bottom_forward[2]],
+                  [center_bottom[1], center_bottom_forward[1]],
                   color=colors, linewidth=linewidth)
 
     def render_bounding_box(self, axis: Axes, colors: np.ndarray, linewidth: float = 1) -> None:
@@ -202,15 +194,7 @@ class Entity:
         """
         Returns the 2D bounding box of the entity.
         """
-        corners = self.view_points(self.corners(), view=self.camera_intrinsic, normalize=True)
-        bottom_left = min(corners[0]), min(corners[1])
-        top_right = max(corners[0]), max(corners[1])
-
-        all_corners = bottom_left + top_right
-        all_corners_int = tuple(int(x) for x in all_corners)
-        assert len(all_corners_int) == 4, "Error: Bounding box must have 4 coordinates!"
-
-        return all_corners_int
+        raise NotImplementedError("Subclass must implement this method")
 
     def get_color(self) -> np.ndarray:
         """
@@ -236,13 +220,9 @@ class EgoVehicle(Entity):
         x_corners = l / 2 * np.array([1,  1,  1,  1, -1, -1, -1, -1])
         y_corners = w / 2 * np.array([1, -1, -1,  1,  1, -1, -1,  1])
         z_corners = h / 2 * np.array([1,  1, -1, -1,  1,  1, -1, -1])
-        corners = np.vstack((z_corners, y_corners, x_corners))
+
+        corners = np.vstack((x_corners, y_corners, z_corners))
+        rot_test = R.from_euler('z', np.pi/2)
+        corners = np.dot(rot_test.as_matrix(), corners)
 
         return corners
-
-    def bottom_corners(self) -> np.ndarray:
-        """
-        Returns the four bottom corners.
-        :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
-        """
-        return self.corners()[:, [1, 2, 6, 5]]

@@ -170,3 +170,5 @@ output.png
 .env
 .llm_srp
 nuscenes-devkit
+local_dev
+waymo-od

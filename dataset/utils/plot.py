@@ -2,6 +2,7 @@ from typing import List
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import statistics
 from PIL import Image
 from matplotlib.axes import Axes
 from matplotlib import patches
@@ -19,6 +20,7 @@ class ScenePlot:
 
         data = Image.open(image_path)
         axs[0].imshow(data)
+        axs[0].axis('off')
 
         for entity in entities:
             entity.render(axs[1], colors=entity.get_color(), linewidth=2)
@@ -30,6 +32,17 @@ class ScenePlot:
         if title is not None:
             fig.suptitle(title)
         plt.tight_layout()
+
+        # Adjust the x and y axis
+        range_x = axs[1].get_xticks()
+        median_x = statistics.median(range_x)
+        x_range = range_x[-1] - range_x[0]
+        range_y = axs[1].get_yticks()
+        median_y = statistics.median(range_y)
+        y_range = range_y[-1] - range_y[0]
+        final_range = max(x_range, y_range)
+        axs[1].set_xlim(median_x - final_range / 2, median_x + final_range / 2)
+        axs[1].set_ylim(median_y - final_range / 2, median_y + final_range / 2)
 
         if out_path is not None:
             plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
@@ -96,6 +109,7 @@ class ScenePlot:
         data = Image.open(image_path)
         data_array = np.array(data)
         ax.imshow(data_array)
+        ax.axis('off')
 
         for entity in entities:
             print(entity.entity_type)
