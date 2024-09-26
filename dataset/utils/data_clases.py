@@ -118,7 +118,7 @@ class Entity:
         :param linewidth: Width in pixel of the box sides.
         """
         bottom_corners = self.bottom_corners()
-        polygon = patches.Polygon(bottom_corners[:2,:].T, closed=True, linewidth=1, edgecolor=colors,
+        polygon = patches.Polygon(bottom_corners[:2, :].T, closed=True, linewidth=1, edgecolor=colors,
                                   facecolor=(1.0, 1.0, 1.0, 0.0), label=self.entity_type)
         axis.add_patch(polygon)
 
@@ -150,7 +150,7 @@ class Entity:
         :return: <np.float: 2>. The center of the box in (x, y).
         """
         bottom_corners = self.bottom_corners()
-        return np.mean(bottom_corners.T, axis=0)[[0, 2]]
+        return np.mean(bottom_corners.T, axis=0)[[0, 1]]
 
     def view_points(self, points: np.ndarray, view: np.ndarray, normalize: bool) -> np.ndarray:
         """

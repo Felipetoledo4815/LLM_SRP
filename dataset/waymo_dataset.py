@@ -18,6 +18,7 @@ ENTITY_TYPE = {
     4: "BICYCLE"
 }
 
+
 class WaymoEntity(Entity):
     def __init__(self, entity_type: str, xyz: np.ndarray, whl: np.ndarray, rotation: R, camera_intrinsic: np.ndarray,
                  camera_extrinsic: np.ndarray, bb: Tuple[int, int, int, int]) -> None:
@@ -35,6 +36,7 @@ class WaymoEntity(Entity):
     def get_2d_bounding_box(self) -> Tuple[int, int, int, int]:
         return self.bb
 
+
 class WaymoDataset(DatasetInterface):
     def __init__(self, config: dict) -> None:
         self.__ego_vehicle_size__ = np.array([1.73, 1.52, 4.08])    # [width, height, length]
@@ -45,16 +47,15 @@ class WaymoDataset(DatasetInterface):
         # Load the dataset
         self.tfrecord_list = []
         for file in os.listdir(self.__root_folder__):
-            # if file.endswith(".tfrecord"):
-            if file.endswith("1120_000_1140_000_with_camera_labels.tfrecord"):
+            if file.endswith(".tfrecord"):
                 self.tfrecord_list.append(self.__root_folder__ + file)
         self.dataset = tf.data.TFRecordDataset(self.tfrecord_list, compression_type='')
         self.dataset_iter = self.dataset.as_numpy_iterator()
 
-        length=0
+        length = 0
         # TODO: Find a better way of doing this!
-        for idx,f in enumerate(self.dataset_iter):
-            length+=1
+        for idx, f in enumerate(self.dataset_iter):
+            length += 1
         self.length = length
         self.dataset_iter = self.dataset.as_numpy_iterator()
 
@@ -74,12 +75,13 @@ class WaymoDataset(DatasetInterface):
         # Creates a temporary file with the given name and writes data to it.
         temp_dir = tempfile.gettempdir()
         temp_file_path = f"{temp_dir}/waymo_temp_image.jpg"
-        
+
         fig, ax = plt.subplots(1, figsize=(5, 5))
         ax.imshow(tf.image.decode_jpeg(frame.images[0].image))
         plt.grid(False)
         plt.axis('off')
         plt.savefig(temp_file_path, bbox_inches='tight', pad_inches=0, dpi=200)
+        plt.close()
 
         return temp_file_path
 
@@ -93,7 +95,7 @@ class WaymoDataset(DatasetInterface):
                 self.dataset_iter = self.dataset.as_numpy_iterator()
                 break
 
-        xyz = np.array([0.0,0.0,0.0])
+        xyz = np.array([0.0, 0.0, 0.0])
         rotation = R.from_euler("z", 0)
         ego_vehicle = EgoVehicle(xyz, self.__ego_vehicle_size__, rotation)
         return ego_vehicle
@@ -113,11 +115,15 @@ class WaymoDataset(DatasetInterface):
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         """Returns list of scene graph triplets given an index"""
-        pass
+        sg_triplets = self.relationship_extractor.get_all_relationships(
+            self.get_entities(index), self.get_ego_vehicle(index))
+        return sg_triplets
 
     def get_bb_triplets(self, index: int) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
         """Returns bounding box and scene graph triplets given an index"""
-        pass
+        bb_triplets = self.relationship_extractor.get_all_bb_relationships(
+            self.get_entities(index), self.get_ego_vehicle(index))
+        return bb_triplets
 
     def plot_data_point(self, index: int, out_path: None | str = None) -> None:
         """Plot data point given an index"""
@@ -128,8 +134,9 @@ class WaymoDataset(DatasetInterface):
 
     def plot_bounding_box(self, index: int, bbs: List[str], entities: List[str] | None = None,
                           out_path: None | str = None) -> None:
-        """Plot bounding box given an index, and bounding boxes"""
-        pass
+        image_path = self.get_image(index)
+        self.scene_plot.plot_2d_bounding_boxes_from_corners(bbs=bbs, image_path=image_path,
+                                                            out_path=out_path, entity_types=entities)
 
     def __len__(self) -> int:
         """Returns length of the dataset"""
@@ -138,6 +145,8 @@ class WaymoDataset(DatasetInterface):
     def frame2entities(self, frame: 'open_dataset.Frame') -> List[Entity]:
         entities = []
         ids, boxes = [], {}
+        # Get rid of occluded objects
+        filter_available = any([label.num_top_lidar_points_in_box > 0 for label in frame.laser_labels])
         for pll in frame.projected_lidar_labels[0].labels:
             idx = pll.id.split('_FRONT')[0]
             ids.append(idx)
@@ -146,7 +155,9 @@ class WaymoDataset(DatasetInterface):
         for ll in frame.laser_labels:
             # if ll.most_visible_camera_name == "FRONT" and ll.camera_synced_box.ByteSize():
             # if ll.camera_synced_box.ByteSize():
-            if ll.id in ids:
+            ocluded_object = (filter_available and not ll.num_top_lidar_points_in_box) or (
+                not filter_available and not ll.num_lidar_points_in_box)
+            if ll.id in ids and not ocluded_object:
                 xyz = np.array([
                     ll.camera_synced_box.center_x,
                     ll.camera_synced_box.center_y,
@@ -155,13 +166,13 @@ class WaymoDataset(DatasetInterface):
                 # As per https://github.com/waymo-research/waymo-open-dataset/issues/30
                 whl = np.array([
                     ll.camera_synced_box.width,  # dim y
-                    ll.camera_synced_box.height, # dim z
-                    ll.camera_synced_box.length, # dim x
+                    ll.camera_synced_box.height,  # dim z
+                    ll.camera_synced_box.length,  # dim x
                 ])
                 rotation = R.from_euler("z", ll.camera_synced_box.heading)
                 if ll.type in ENTITY_TYPE:
-                    camera_extrinsic = np.array(frame.context.camera_calibrations[0].extrinsic.transform).reshape(4,4)
-                    camera_intrinsic = np.array(frame.context.camera_calibrations[0].intrinsic).reshape(3,3)
+                    camera_extrinsic = np.array(frame.context.camera_calibrations[0].extrinsic.transform).reshape(4, 4)
+                    camera_intrinsic = np.array(frame.context.camera_calibrations[0].intrinsic).reshape(3, 3)
                     bb = self.box2bb(boxes[ll.id])
                     entity = WaymoEntity(ENTITY_TYPE[ll.type], xyz, whl, rotation, camera_intrinsic, camera_extrinsic,
                                          bb)

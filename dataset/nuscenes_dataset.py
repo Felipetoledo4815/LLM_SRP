@@ -3,7 +3,6 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import Box
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
 from dataset.utils.relationship_extractor import RelationshipExtractor

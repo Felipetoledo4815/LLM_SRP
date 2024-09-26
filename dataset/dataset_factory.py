@@ -1,10 +1,12 @@
 from typing import List, Dict
 from dataset import config
 from dataset.nuscenes_dataset import NuscenesDataset
+from dataset.waymo_dataset import WaymoDataset
 
 
 DATASET_CLASSES = {
-    "nuscenes": NuscenesDataset
+    "nuscenes": NuscenesDataset,
+    "waymo": WaymoDataset
 }
 
 
