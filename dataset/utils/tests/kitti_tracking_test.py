@@ -5,8 +5,8 @@ from dataset import config
 
 
 def main():
-    kitti = KittiDataset(config.kitti_tracking)
-    idx = 0
+    kitti = KittiDataset(config.kitti_3d_dataset)
+    idx = 265
     ego_vehicle = kitti.get_ego_vehicle(idx)
     entities = kitti.get_entities(idx)
     image_path = kitti.get_image(idx)
@@ -20,7 +20,7 @@ def main():
 
     scene_plot.plot_2d_bounding_boxes([entities[0]], image_path)
     # print("we are here")
-    # scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]], image_path)
+    scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]], image_path)
     # scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]],
                                                    #image_path,
                                                    #entity_types=[bb_triplets[0][1][0][0]])

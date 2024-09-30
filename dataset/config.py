@@ -32,4 +32,10 @@ kitti_tracking = {
     "verbose": False,
     "field_of_view": 90
 }
+kitti_3d_dataset = {
+    "root_folder": os.getenv("KITTI_3D_DATASET"),
+    "version": "data_object_image_2",
+    "verbose": False,
+    "field_of_view": 90
+}
 

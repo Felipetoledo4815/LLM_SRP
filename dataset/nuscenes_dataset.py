@@ -44,10 +44,6 @@ class NuscenesDataset(DatasetInterface):
 
     def get_entities(self, index: int) -> List[Entity]:
         annotation = self.nusc.get_sample_data(self.image_token_list[index])
-        print("////////////////////////////////////////")
-        print(self.image_token_list[index])
-        print(annotation)
-        print("////////////////////////////////////////")
         filtered_annotations = self.filter_annotations(annotation[1])
         entities_list = self.convert_annotations(filtered_annotations, annotation[2])
         return entities_list
@@ -118,6 +114,8 @@ class NuscenesDataset(DatasetInterface):
         whl = np.array([w, h, l])
         # Convert the quaternion to euler angles
         ypr = R.from_euler("zyx", ann.orientation.yaw_pitch_roll)
+        print("llllllllllll")
+        print(ypr)
         entity = Entity(entity_type, ann.center, whl, ypr, camera_intrinsic)
         return entity
 

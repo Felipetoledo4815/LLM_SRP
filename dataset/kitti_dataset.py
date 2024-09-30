@@ -50,8 +50,8 @@ class KittiDataset(DatasetInterface):
 
     def get_filtered_image_label(self, annotations):
         filtered_image_label = []
-        for ann in annotations['image_label']:
-            if ann['visibility'] == '0': # ann['visibility'] ==  '0' is considering only fully visible objects
+        for ann in annotations['image_labels']:
+            if ann['visibility'] == '0' or ann['visibility'] == '2': # ann['visibility'] ==  '0' is considering only fully visible objects
                 filtered_image_label.append(ann)
         return filtered_image_label
 
@@ -79,8 +79,16 @@ class KittiDataset(DatasetInterface):
         #    [-numpy.sin(rotation_y), 0, numpy.cos(rotation_y)]
         #])
         #rotation = R.from_matrix(rotation_matrix)
-        #quaternion = rotation.as_quat()  # Returns [x, y, z, w]
-        ypr = R.from_euler("zyx", [rotation_y, 0 , 0])
+        # #quaternion = rotation.as_quat()  # Returns [x, y, z, w]
+        # r = R.from_euler('y', rotation_y, degrees=False)
+        # yaw, pitch, roll = r.as_euler('zyx', degrees=False)
+        # print(ann['name'])
+        # print(roll)
+        # print(pitch)
+        # print(yaw)
+
+        ypr = R.from_euler("xyz", [  0, 0, rotation_y ])
+        # ypr = R.from_euler("y", [yaw])
         entity = Entity(entity_type, numpy.array(ann['location']).astype(float), whl, ypr, camera_intrinsic)
         return entity
 
