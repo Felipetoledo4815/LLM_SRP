@@ -6,9 +6,11 @@ Please follow the instructions in this [README](./dataset/README.md).
 ## Getting started
 1. Create a local `.env` file on the root of the repository containing the following variables:
 ```bash
-NUSCENES_MINI=/path/to/nuscenes_mini/
-NUSCENES=/path/to/nuscenes/
+NUSCENES_MINI=/absolute_path*/to/nuscenes_mini/
+NUSCENES=/absolute_path*/to/nuscenes/
 ```
+**Note that you need to specify the absolute path to the dataset.*
+
 2. Create a conda environment with the following command:
 ```bash
 conda create -n llm_srp python=3.10

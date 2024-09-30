@@ -1,4 +1,5 @@
 import json
+from tqdm import tqdm
 from dataset.llm_srp_dataset import LLMSRPDataset, ImageFormat, TripletsFormat, BoundingBoxFormat
 
 
@@ -21,12 +22,13 @@ def get_json_sample(idx: int, img: str, sg_triplets: str) -> dict:
 
 def main():
     llm_srp_dataset = LLMSRPDataset(["nuscenes"], output_format=(
-        ImageFormat.DEFAULT, TripletsFormat.DEFAULT, BoundingBoxFormat.DEFAULT), configs={"nuscenes": "nuscenes_mini"})
+        ImageFormat.DEFAULT, TripletsFormat.DEFAULT, BoundingBoxFormat.DEFAULT), configs={"nuscenes": "nuscenes"})
     idx = 0
     for split in ["train", "val", "test"]:
+        print("Processing", split)
         list_of_json_samples = []
         llm_srp_dataset.set_split(split)
-        for i in range(len(llm_srp_dataset)):   # pylint: disable=C0200
+        for i in tqdm(range(len(llm_srp_dataset))):   # pylint: disable=C0200
             img, sg_triplets, _ = llm_srp_dataset[i]
             list_of_json_samples.append(get_json_sample(idx, str(img), str(sg_triplets)))
             idx += 1

@@ -3,11 +3,35 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import Box
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
 from dataset.utils.relationship_extractor import RelationshipExtractor
 from dataset.utils.plot import ScenePlot
+
+
+class NuscenesEntity(Entity):
+    def __init__(self, entity_type: str, xyz: np.ndarray, whl: np.ndarray, rotation: R,
+                 camera_intrinsic: np.ndarray) -> None:
+        super().__init__(entity_type, xyz, whl, rotation, camera_intrinsic)
+
+    def corners(self, whl_factor: float = 1.0) -> np.ndarray:
+        corners = super().corners(whl_factor)
+        # Rotate the corners to be in East-North-Up (ENU) coordinate system (right-hand rule)
+        rot = R.from_euler('x', (-np.pi/2))
+        corners = np.dot(rot.as_matrix(), corners)
+        return corners
+
+    def get_2d_bounding_box(self) -> Tuple[int, int, int, int]:
+        corners = super().corners()
+        corners = self.view_points(corners, view=self.camera_intrinsic, normalize=True)
+        bottom_left = min(corners[0]), min(corners[1])
+        top_right = max(corners[0]), max(corners[1])
+
+        all_corners = bottom_left + top_right
+        all_corners_int = tuple(int(x) for x in all_corners)
+        assert len(all_corners_int) == 4, "Error: Bounding box must have 4 coordinates!"
+
+        return all_corners_int
 
 
 class NuscenesDataset(DatasetInterface):
@@ -27,7 +51,6 @@ class NuscenesDataset(DatasetInterface):
         return len(self.sample_token_list)
 
     def get_image(self, index: int) -> str:
-        print(self.image_path_list[index])
         return self.image_path_list[index]
 
     def get_ego_vehicle(self, index: int) -> EgoVehicle:
@@ -114,9 +137,7 @@ class NuscenesDataset(DatasetInterface):
         whl = np.array([w, h, l])
         # Convert the quaternion to euler angles
         ypr = R.from_euler("zyx", ann.orientation.yaw_pitch_roll)
-        print("llllllllllll")
-        print(ypr)
-        entity = Entity(entity_type, ann.center, whl, ypr, camera_intrinsic)
+        entity = NuscenesEntity(entity_type, ann.center, whl, ypr, camera_intrinsic)
         return entity
 
     def plot_data_point(self, index: int, out_path: None | str = None) -> None:
