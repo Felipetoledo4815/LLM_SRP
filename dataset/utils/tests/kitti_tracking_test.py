@@ -18,9 +18,9 @@ def main():
     scene_plot = ScenePlot(field_of_view=kitti.field_of_view)
     scene_plot.render_scene(ego_vehicle, entities, image_path)
 
-    scene_plot.plot_2d_bounding_boxes([entities[0]], image_path)
+    # scene_plot.plot_2d_bounding_boxes([entities[0]], image_path)
     # print("we are here")
-    scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]], image_path)
+    # scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]], image_path)
     # scene_plot.plot_2d_bounding_boxes_from_corners([bb_triplets[0][0]],
                                                    #image_path,
                                                    #entity_types=[bb_triplets[0][1][0][0]])

@@ -102,7 +102,7 @@ class Entity:
         Returns the four bottom corners.
         :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
         """
-        return self.corners()[:, [2, 3, 7, 6]]
+        return self.corners()[:, [0, 3, 6, 4]]
 
     def render(self,
                axis: Axes,
@@ -224,3 +224,10 @@ class EgoVehicle(Entity):
         corners = np.dot(rot_test.as_matrix(), corners)
 
         return corners
+
+    def bottom_corners(self) -> np.ndarray:
+        """
+        Returns the four bottom corners.
+        :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
+        """
+        return self.corners()[:, [2, 3, 7, 6]]
