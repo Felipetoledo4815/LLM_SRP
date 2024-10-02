@@ -100,9 +100,9 @@ class KittiDataset(DatasetInterface):
         ypr = R.from_euler("xyz", [  0, rotation_y, 0])
         # ypr = R.from_euler("y", [yaw])
         entity = KittiEntity(entity_type, numpy.array([ann['location'][0], ann['location'][1], ann['location'][2]]).astype(float), whl, ypr, camera_intrinsic,
-                             [float(ann['bbox']['bottom']),
-                              float(ann['bbox']['left']), float(ann['bbox']['top']),
-                              float(ann['bbox']['right'])])
+                             [float(ann['bbox']['left']),
+                              float(ann['bbox']['top']), float(ann['bbox']['right']),
+                              float(ann['bbox']['bottom'])])
         return entity
 
     def load_kitti_data(self, config: dict):
