@@ -5,7 +5,6 @@ from matplotlib import patches
 from matplotlib.axes import Axes
 import numpy as np
 
-
 class EntityType(Enum):
     PERSON = (0, 0, 230)  # Blue
     BICYCLE = (220, 20, 60)  # Crimson
@@ -87,9 +86,7 @@ class Entity:
         y_corners = w / 2 * np.array([1, -1, -1,  1,  1, -1, -1,  1])
         z_corners = h / 2 * np.array([1,  1, -1, -1,  1,  1, -1, -1])
         corners = np.vstack((x_corners, y_corners, z_corners))
-        # Rotate
         corners = np.dot(self.ypr.as_matrix(), corners)
-
         # Translate
         x, y, z = self.xyz
         corners[0, :] = corners[0, :] + x
@@ -102,7 +99,7 @@ class Entity:
         Returns the four bottom corners.
         :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
         """
-        return self.corners()[:, [0, 3, 6, 4]]
+        return self.corners()[:, [2, 3, 7, 6]]
 
     def render(self,
                axis: Axes,

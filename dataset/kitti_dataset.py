@@ -14,14 +14,6 @@ class KittiEntity(Entity):
         super().__init__(entity_type, xyz, whl, rotation, camera_intrinsic)
         self.bb = bb
 
-    def corners(self, whl_factor: float = 1.0) -> numpy.ndarray:
-        corners = super().corners(whl_factor)
-        # Rotate the corners to be in East-North-Up (ENU) coordinate system (right-hand rule)
-        rot = R.from_euler('xyz', [-numpy.pi/2, 0, 0])
-        # rot = R.from_euler('x', -numpy.pi/2)
-        corners = numpy.dot(rot.as_matrix(), corners)
-        return corners
-
     def get_2d_bounding_box(self) -> Tuple[int, int, int, int]:
         return self.bb
 
@@ -75,7 +67,7 @@ class KittiDataset(DatasetInterface):
     def get_filtered_image_label(self, annotations):
         filtered_image_label = []
         for ann in annotations['image_labels']:
-            if ann['visibility'] == '0' or ann['visibility'] == '2' or ann['visibility'] ==  '3' or ann['visibility'] ==  '1':  # ann['visibility'] ==  '0' is considering only fully visible objects
+            if ann['visibility'] == '0' or ann['visibility'] == '2' or ann['visibility'] ==  '3' or ann['visibility'] ==  '1':  # ann['visibility'] ==  '0' is considering only fully visible objects or
                 filtered_image_label.append(ann)
         return filtered_image_label
 
@@ -93,13 +85,13 @@ class KittiDataset(DatasetInterface):
         else:
             entity_type = 'car'
         # Swap the length and the height of the bounding box
-        whl = numpy.array([ann['dimensions']['width'], ann['dimensions']['height'], ann['dimensions']['length']])
+        whl = numpy.array([ann['dimensions']['height'], ann['dimensions']['width'], ann['dimensions']['length']])
         whl = whl.astype(float)
         # Convert the quaternion to euler angles
         rotation_y = float(ann['rotating_y'])
-        ypr = R.from_euler("xyz", [  0, rotation_y, 0])
+        ypr = R.from_euler("z", -rotation_y)
         # ypr = R.from_euler("y", [yaw])
-        entity = KittiEntity(entity_type, numpy.array([ann['location'][0], ann['location'][1], ann['location'][2]]).astype(float), whl, ypr, camera_intrinsic,
+        entity = KittiEntity(entity_type, numpy.array([ann['location'][0], ann['location'][2], ann['location'][1]]).astype(float), whl, ypr, camera_intrinsic,
                              [float(ann['bbox']['left']),
                               float(ann['bbox']['top']), float(ann['bbox']['right']),
                               float(ann['bbox']['bottom'])])
