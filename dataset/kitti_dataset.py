@@ -46,11 +46,6 @@ class KittiDataset(DatasetInterface):
 
     def get_ego_vehicle(self, index: int) -> EgoVehicle:
         d = self.kitti_data[index]['oxts_data']
-        # rotation = [float(i) for i in self.kitti_data[index]['rotation']]
-        # R_rect = numpy.array(rotation).reshape(3, 3)
-        # rotation = R.from_matrix(R_rect)
-        # quaternion = rotation.as_quat()
-
         xyz = numpy.array([0,0,0])
         rotation = [
           d['yaw'], d['pitch'], d['roll']
@@ -79,11 +74,28 @@ class KittiDataset(DatasetInterface):
 
     def data2entity(self, ann: {}, camera_intrinsic: numpy.ndarray = numpy.eye(3)) -> Entity:
         entity_type = None
+        # PERSON = (0, 0, 230)  # Blue
+        # BICYCLE = (220, 20, 60)  # Crimson
+        # BUS = (255, 127, 80)  # Coral
+        # CAR = (255, 158, 0)  # Orange
+        # CONSTRUCTION_VEHICLE = (233, 150, 70)  # Darksalmon
+        # EMERGENCY_VEHICLE = (255, 215, 0)  # Gold
+        # MOTORCYCLE = (255, 61, 99)  # Red
+        # TRAILER_TRUCK = (255, 140, 0)  # Darkorange
+        # TRUCK = (255, 99, 71)  # Tomato
+        # EGO = (0, 0, 0)  # Black
+        # the type of object in kitti: 'Car', 'Van', 'Truck',
+        # 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram',
+        # 'Misc' or 'DontCare'
         # TODO: Define a mapper for the entity types
-        if ann['name'] == "Pedestrian":
+        if ann['name'] == "Pedestrian" or ann['name'] ==  "Person_sitting":
             entity_type = "person"
+        elif ann['name'] == "Cyclist":
+            entity_type = "bicycle"
+        elif ann['name'] == "Truck":
+            entity_type = "truck"
         else:
-            entity_type = 'car'
+            entity_type = "car"
         # Swap the length and the height of the bounding box
         whl = numpy.array([ann['dimensions']['height'], ann['dimensions']['width'], ann['dimensions']['length']])
         whl = whl.astype(float)

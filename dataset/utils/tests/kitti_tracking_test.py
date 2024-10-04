@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 def main():
     kitti = KittiDataset(config.kitti_3d_dataset)
-    idx = 4631
+    idx = 3201 #4631 265 3201
     ego_vehicle = kitti.get_ego_vehicle(idx)
     entities = kitti.get_entities(idx)
     image_path = kitti.get_image(idx)
