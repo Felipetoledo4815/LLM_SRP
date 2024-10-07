@@ -22,6 +22,7 @@ class KittiDataset(DatasetInterface):
     def __init__(self, config: dict) -> None:
         # ego vehicle size is taken from kitti set up page
         self.__ego_vehicle_size__ = numpy.array([1.60, 1.73, 2.71])  # [width, height, length]
+        self.__root_folder__ = config['root_folder'] if config['root_folder'].endswith('/') else config['root_folder'] + '/'
         self.field_of_view = config['field_of_view']
         self.kitti_data = self.load_kitti_data(config)
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
@@ -45,11 +46,8 @@ class KittiDataset(DatasetInterface):
         return self.kitti_data[index]['image_path']
 
     def get_ego_vehicle(self, index: int) -> EgoVehicle:
-        d = self.kitti_data[index]['oxts_data']
         xyz = numpy.array([0,0,0])
-        rotation = [
-          d['yaw'], d['pitch'], d['roll']
-        ]
+        rotation = R.from_euler("z", 0)
         ego_vehicle = EgoVehicle(xyz, self.__ego_vehicle_size__, rotation)
         return ego_vehicle
 
@@ -74,20 +72,6 @@ class KittiDataset(DatasetInterface):
 
     def data2entity(self, ann: {}, camera_intrinsic: numpy.ndarray = numpy.eye(3)) -> Entity:
         entity_type = None
-        # PERSON = (0, 0, 230)  # Blue
-        # BICYCLE = (220, 20, 60)  # Crimson
-        # BUS = (255, 127, 80)  # Coral
-        # CAR = (255, 158, 0)  # Orange
-        # CONSTRUCTION_VEHICLE = (233, 150, 70)  # Darksalmon
-        # EMERGENCY_VEHICLE = (255, 215, 0)  # Gold
-        # MOTORCYCLE = (255, 61, 99)  # Red
-        # TRAILER_TRUCK = (255, 140, 0)  # Darkorange
-        # TRUCK = (255, 99, 71)  # Tomato
-        # EGO = (0, 0, 0)  # Black
-        # the type of object in kitti: 'Car', 'Van', 'Truck',
-        # 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram',
-        # 'Misc' or 'DontCare'
-        # TODO: Define a mapper for the entity types
         if ann['name'] == "Pedestrian" or ann['name'] ==  "Person_sitting":
             entity_type = "person"
         elif ann['name'] == "Cyclist":
@@ -110,12 +94,14 @@ class KittiDataset(DatasetInterface):
         return entity
 
     def load_kitti_data(self, config: dict):
-        root_folder = config['root_folder'] if config['root_folder'].endswith(
-            '/') else config['root_folder'] + '/'
-        json_file_path = root_folder + 'converted_data.json'
+        # Need to implement data parsing mechanism from here
+        json_file_path = self.__root_folder__ + 'converted_data.json'
         with open(json_file_path, 'r') as file:
             data = json.load(file)
         return data
+
+    def prepare_kitti_data_corpus(self):
+        return
 
     def plot_data_point(self, index: int, out_path: None | str = None) -> None:
         ego_vehicle = self.get_ego_vehicle(index)
