@@ -51,7 +51,7 @@ def plot_entity_corners_on_3d_plain(entities):
 
 def main():
     kitti = KittiDataset(config.kitti_3d_dataset)
-    idx = 5789 #4631 265 3201
+    idx = 4631 #4631 265 3201 5789
     ego_vehicle = kitti.get_ego_vehicle(idx)
     entities = kitti.get_entities(idx)
     image_path = kitti.get_image(idx)

@@ -6,7 +6,7 @@ import numpy
 from dataset.utils.data_clases import EgoVehicle, Entity
 from dataset.utils.relationship_extractor import RelationshipExtractor
 from scipy.spatial.transform import Rotation as R
-
+import os
 
 class KittiEntity(Entity):
     def __init__(self, entity_type: str, xyz: numpy.ndarray, whl: numpy.ndarray, rotation: R,
@@ -23,14 +23,17 @@ class KittiDataset(DatasetInterface):
         # ego vehicle size is taken from kitti set up page
         self.__ego_vehicle_size__ = numpy.array([1.60, 1.73, 2.71])  # [width, height, length]
         self.__root_folder__ = config['root_folder'] if config['root_folder'].endswith('/') else config['root_folder'] + '/'
+        self.__image_folder__ = self.__root_folder__ + config['version'] + '/training/image_2/'
+        self.list_of_images = self.parse_image_list_from_folder(self.__image_folder__)
+        self.__label_folder__ = self.__root_folder__ + 'data_object_label_2/training/label_2/'
+        self.__camera_calib_folder__ = self.__root_folder__ + 'data_object_calib/training/calib/'
         self.field_of_view = config['field_of_view']
-        self.kitti_data = self.load_kitti_data(config)
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
         # need to adopt according to kitti tracking
         return
 
     def __len__(self) -> int:
-        return len(self.kitti_data)
+        return len(self.list_of_images)
 
     def get_bb_triplets(self, index: int) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
         bb_triplets = self.relationship_extractor.get_all_bb_relationships(
@@ -43,7 +46,7 @@ class KittiDataset(DatasetInterface):
         return sg_triplets
 
     def get_image(self, index: int) -> str:
-        return self.kitti_data[index]['image_path']
+        return self.__image_folder__ + self.list_of_images[index] + '.png'
 
     def get_ego_vehicle(self, index: int) -> EgoVehicle:
         xyz = numpy.array([0,0,0])
@@ -52,7 +55,7 @@ class KittiDataset(DatasetInterface):
         return ego_vehicle
 
     def get_entities(self, index: int) -> List[Entity]:
-        annotations = self.kitti_data[index]
+        annotations = self.get_annotations_by_index(index)
         filtered_image_label = self.get_filtered_image_label(annotations)
         list_of_entities = self.convert_annotations(filtered_image_label, annotations['camera_intrinsics'])
         return list_of_entities
@@ -93,16 +96,6 @@ class KittiDataset(DatasetInterface):
                               float(ann['bbox']['bottom'])])
         return entity
 
-    def load_kitti_data(self, config: dict):
-        # Need to implement data parsing mechanism from here
-        json_file_path = self.__root_folder__ + 'converted_data.json'
-        with open(json_file_path, 'r') as file:
-            data = json.load(file)
-        return data
-
-    def prepare_kitti_data_corpus(self):
-        return
-
     def plot_data_point(self, index: int, out_path: None | str = None) -> None:
         ego_vehicle = self.get_ego_vehicle(index)
         entities = self.get_entities(index)
@@ -114,3 +107,59 @@ class KittiDataset(DatasetInterface):
         image_path = self.get_image(index)
         self.scene_plot.plot_2d_bounding_boxes_from_corners(bbs=bbs, image_path=image_path,
                                                             out_path=out_path, entity_types=entities)
+
+    # methods for data processing
+    def parse_image_list_from_folder(self, path):
+        list_of_image_file_index = [os.path.splitext(f)[0] for f in os.listdir(path) if f.endswith('.png')]
+        return sorted(list_of_image_file_index)
+
+    def get_camera_intrinsic(self, index):
+        # https://mmdetection3d.readthedocs.io/en/v0.17.3/datasets/kitti_det.html (P2: camera2 projection matrix after rectification, an 3x4 array)
+        path = self.__camera_calib_folder__ + self.list_of_images[index] + '.txt'
+        with open(path, 'r') as file:
+            content = file.read()
+            l = next(line for line in content.split('\n') if line.startswith('P2'))
+            _, value = l.split(':', 1)
+            P2 = numpy.array([float(x) for x in value.split()]).reshape(3, 4)
+            p2_matrix = P2[:3, :3]
+        return p2_matrix.tolist()
+
+    def get_labels_for_image(self, index):
+        label_file_path = self.__label_folder__ + self.list_of_images[index] + '.txt'
+        with open(label_file_path, 'r') as file:
+            list_of_labels = [line.strip() for line in file]
+        labels = []
+        for label in list_of_labels:
+            d = label.split()
+            id = d[0].zfill(6)
+            if d[0] != 'DontCare':
+                obj = {
+                    'name': d[0],
+                    'truncated': d[1],
+                    'visibility': d[2],
+                    'bbox': {
+                        'left': d[4],
+                        'top': d[5],
+                        'right': d[6],
+                        'bottom': d[7]
+                    },
+                    'dimensions': {
+                        'height': d[8],
+                        'width': d[9],
+                        'length': d[10]
+                    },
+                    'location': [d[11], d[12], d[13]],
+                    'rotating_y': d[14],
+                }
+                labels.append(obj)
+        return labels
+
+    def get_annotations_by_index(self, index):
+        obj = {
+            'image_serial': self.list_of_images[index],
+            'index': index,
+            'image_labels': self.get_labels_for_image(index),
+            'camera_intrinsics': self.get_camera_intrinsic(index),
+        }
+        return obj
+

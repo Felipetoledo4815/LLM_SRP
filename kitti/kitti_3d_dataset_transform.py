@@ -31,7 +31,7 @@ def main():
     for index in range(len(list_of_images)):
         path = image_folders_path + list_of_images[index] + '.png'
         camera_calib_info_p2 = get_camera_intrinsic(camera_calib_file_path + list_of_images[index]+ '.txt')
-        rotation_data_from_camera_calib = get_rotation_data(camera_calib_file_path + list_of_images[index]+ '.txt')
+        # rotation_data_from_camera_calib = get_rotation_data(camera_calib_file_path + list_of_images[index]+ '.txt')
         list_of_labels = get_list_of_labels_for_image_folder(label_folders + list_of_images[index] + '.txt')
 
         file_obj = {
@@ -41,20 +41,20 @@ def main():
             'image_label_path': label_folders + list_of_images[index] + '.txt',
             'image_labels': get_labels_for_image(list_of_labels),
             'camera_intrinsics': camera_calib_info_p2,
-            'rotation': rotation_data_from_camera_calib
+            # 'rotation': rotation_data_from_camera_calib
         }
         objects.append(file_obj)
     print(len(objects))
     with open(json_file_path, 'w') as json_file:
         json.dump(objects, json_file, indent = 4)
     return
-def get_rotation_data(path):
-    with open(path,'r') as file:
-        content = file.read()
-        l = next(line for line in content.split('\n') if line.startswith('R0_rect'))
-        value = l.split(' ')[1:]
-        value = [i for i in value if i]
-    return value
+# def get_rotation_data(path):
+#     with open(path,'r') as file:
+#         content = file.read()
+#         l = next(line for line in content.split('\n') if line.startswith('R0_rect'))
+#         value = l.split(' ')[1:]
+#         value = [i for i in value if i]
+#     return value
 
 def get_camera_intrinsic(camera_calib_file_path):
     # https://mmdetection3d.readthedocs.io/en/v0.17.3/datasets/kitti_det.html (P2: camera2 projection matrix after rectification, an 3x4 array)
