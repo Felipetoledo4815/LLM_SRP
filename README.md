@@ -51,13 +51,23 @@ We are only using the train portion of the above mentioned database. Once data i
 Add the following line to your `.env` file
 
 ```commandline
-KITTI_3D_DATASET=/absolute_path*/path/to/kitti_3d_object/experiements/
+KITTI_3D_DATASET=/absolute_path*/path/to/kitti_3d_object/
 ```
 
-Now, extract the previously mentioned file in the `KITTI_3D_DATASET` directory.
+Now, extract the previously mentioned file in the `KITTI_3D_DATASET` directory from the `.env` file.
 
 To inspect the results from the kitti dataset, run the following command
 
 ```commandline
-python -m dataset.utils.tests.kitti_tracking_test
+python -m dataset.utils.tests.kitti_scene_plot
+```
+
+To just test the kitti dataset run the following command
+
+```commandline
+python -m dataset.tests.run_kitti
+```
+To get the 3d plot of the vehicles along with the scene plot run
+```commandline
+python -m dataset.utils.tests.kitti_with_3d_plot
 ```

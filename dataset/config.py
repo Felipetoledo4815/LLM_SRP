@@ -20,18 +20,6 @@ nuscenes = {
 }
 
 #kitti
-kitti = {
-    "root_folder": os.getenv("KITTI"),
-    "version": "image_03",
-    "verbose": False,
-    "field_of_view": 90
-}
-kitti_tracking = {
-    "root_folder": os.getenv("KITTI_TRACKING"),
-    "version": "data_tracking_image_2",
-    "verbose": False,
-    "field_of_view": 90
-}
 kitti_3d_dataset = {
     "root_folder": os.getenv("KITTI_3D_DATASET"),
     "version": "data_object_image_2",

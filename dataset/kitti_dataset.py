@@ -1,5 +1,6 @@
 import json
 from typing import List, Tuple
+from dataset.utils.plot import ScenePlot
 
 from dataset.dataset_interface import DatasetInterface
 import numpy
@@ -29,7 +30,7 @@ class KittiDataset(DatasetInterface):
         self.__camera_calib_folder__ = self.__root_folder__ + 'data_object_calib/training/calib/'
         self.field_of_view = config['field_of_view']
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
-        # need to adopt according to kitti tracking
+        self.scene_plot = ScenePlot(field_of_view=self.field_of_view)
         return
 
     def __len__(self) -> int:
@@ -68,10 +69,10 @@ class KittiDataset(DatasetInterface):
         return filtered_image_label
 
     def convert_annotations(self, image_labels: [], camera_intrinsics) -> List[Entity]:
-        llmsrp_annotations = []
+        annotations = []
         for ann in image_labels:
-            llmsrp_annotations.append(self.data2entity(ann, numpy.array(camera_intrinsics)))
-        return llmsrp_annotations
+            annotations.append(self.data2entity(ann, numpy.array(camera_intrinsics)))
+        return annotations
 
     def data2entity(self, ann: {}, camera_intrinsic: numpy.ndarray = numpy.eye(3)) -> Entity:
         entity_type = None
