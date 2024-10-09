@@ -5,6 +5,7 @@ from matplotlib import patches
 from matplotlib.axes import Axes
 import numpy as np
 
+
 class EntityType(Enum):
     PERSON = (0, 0, 230)  # Blue
     BICYCLE = (220, 20, 60)  # Crimson
@@ -86,12 +87,16 @@ class Entity:
         y_corners = w / 2 * np.array([1, -1, -1,  1,  1, -1, -1,  1])
         z_corners = h / 2 * np.array([1,  1, -1, -1,  1,  1, -1, -1])
         corners = np.vstack((x_corners, y_corners, z_corners))
+
+
         corners = np.dot(self.ypr.as_matrix(), corners)
+
         # Translate
         x, y, z = self.xyz
         corners[0, :] = corners[0, :] + x
         corners[1, :] = corners[1, :] + y
         corners[2, :] = corners[2, :] + z
+        
         return corners
 
     def bottom_corners(self) -> np.ndarray:

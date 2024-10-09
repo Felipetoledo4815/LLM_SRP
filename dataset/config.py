@@ -32,5 +32,3 @@ waymo_validation = {
     "root_folder": os.getenv("WAYMO_VAL"),
     "field_of_view": 50.4   # https://arxiv.org/pdf/1912.04838
 }
-
-

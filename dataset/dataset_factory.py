@@ -19,8 +19,7 @@ class DatasetFactory:
             d_config = d
             if configs is not None and d in configs.keys():
                 d_config = configs[d]
-                print(d_config)
-            self.datasets[d] = d_class(getattr(config, d_config)) # getattr is basically passing the config of d_config to NuscenesDataset class
+            self.datasets[d] = d_class(getattr(config, d_config))
 
     def get_datasets(self) -> dict:
         return self.datasets
