@@ -173,3 +173,4 @@ nuscenes-devkit
 path/
 local_dev
 waymo-od
+.idea
