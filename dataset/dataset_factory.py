@@ -2,11 +2,13 @@ from typing import List, Dict
 from dataset import config
 from dataset.nuscenes_dataset import NuscenesDataset
 from dataset.waymo_dataset import WaymoDataset
+from dataset.kitti_dataset import KittiDataset
 
 
 DATASET_CLASSES = {
     "nuscenes": NuscenesDataset,
-    "waymo": WaymoDataset
+    "waymo": WaymoDataset,
+    "kitti": KittiDataset
 }
 
 
