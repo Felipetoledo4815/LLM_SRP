@@ -57,6 +57,63 @@ class RelationshipExtractor:
         # Check if the absolute value of the angle is within the half field of view
         return abs(adjusted_angle_to_entity) <= half_fov_rad
 
+    def is_occluded(self, entity: Entity, all_entities: List[Entity]) -> bool:
+        # Ray from (0,0,0) to the top center point of the entity
+        entity_top_center_point = entity.top_center_point()
+        ray = {"origin": np.array([0, 0, 0]), "direction": entity_top_center_point - np.array([0, 0, 0])}
+        for other_entity in all_entities:
+            if entity == other_entity:
+                continue
+            else:
+                # Check if the ray intersects with the other_entity planes
+                other_entity_planes = other_entity.lateral_planes()
+                # for ray in rays:
+                for plane in other_entity_planes:
+                    denominator = np.dot(plane["normal"], ray["direction"])
+                    if np.isclose(denominator, 0):  # Ray is parallel to the plane
+                        continue
+                    numerator = plane["d"] - np.dot(plane["normal"], ray["origin"])
+                    t = numerator / denominator
+                    if t < 0:   # Intersection is in the opposite direction of the ray
+                        continue
+                    intersection_point = ray["origin"] + t * ray["direction"]
+                    if self.is_point_in_polygon(intersection_point, plane['points']):
+                        return True
+
+        return False
+
+    def is_point_in_polygon(self, point: np.ndarray, quad: List[np.ndarray]) -> bool:
+        # Project 3D points to 2D by choosing the two most varying coordinates
+        # Find the range of coordinates to determine which axis to ignore
+        quad = np.stack(quad, axis=0) # type: ignore
+        ranges = np.ptp(quad, axis=0)  # Range (max - min) for x, y, z
+
+        # Ignore the axis with the smallest range
+        ignore_axis = np.argmin(ranges)
+
+        # Create 2D projections of the quadrilateral and the point
+        quad_2d = np.delete(quad, ignore_axis, axis=1)
+        point_2d = np.delete(point, ignore_axis)
+
+        x, y = point_2d
+        n = len(quad_2d)
+
+        # Check if point_2d is inside quad_2d
+        inside = False
+        p1x, p1y = quad_2d[0]
+        for i in range(n + 1):
+            p2x, p2y = quad_2d[i % n]
+            xinters = float('inf')
+            if min(p1y, p2y) < y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+            p1x, p1y = p2x, p2y
+
+        return inside
+
     def get_distance(self, entity: Entity, ego_vehicle: EgoVehicle) -> float:
         distance = np.linalg.norm(entity.get_projected_center_point() - ego_vehicle.get_projected_center_point())
         return distance.item()

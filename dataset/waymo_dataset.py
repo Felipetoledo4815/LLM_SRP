@@ -1,4 +1,5 @@
 from typing import List, Tuple
+from functools import lru_cache
 import tempfile
 import os
 import numpy as np
@@ -100,6 +101,7 @@ class WaymoDataset(DatasetInterface):
         ego_vehicle = EgoVehicle(xyz, self.__ego_vehicle_size__, rotation)
         return ego_vehicle
 
+    @lru_cache()
     def get_entities(self, index: int) -> List[Entity]:
         """Returns list of entities given an index"""
         # TODO: Find a better way of doing this!
@@ -109,9 +111,15 @@ class WaymoDataset(DatasetInterface):
                 frame.ParseFromString(data)
                 self.dataset_iter = self.dataset.as_numpy_iterator()
                 break
-
         entities = self.frame2entities(frame)
-        return entities
+
+        # Apply occlusion filter
+        not_occluded_entities = []
+        for entity in entities:
+            if not self.relationship_extractor.is_occluded(entity, entities):
+                not_occluded_entities.append(entity)
+
+        return not_occluded_entities
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         """Returns list of scene graph triplets given an index"""

@@ -1,4 +1,5 @@
 from typing import List, Tuple
+from functools import lru_cache
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import Box
 from scipy.spatial.transform import Rotation as R
@@ -65,11 +66,19 @@ class NuscenesDataset(DatasetInterface):
         ego_vehicle = EgoVehicle(xyz, self.__ego_vehicle_size__, rotation)
         return ego_vehicle
 
+    @lru_cache()
     def get_entities(self, index: int) -> List[Entity]:
         annotation = self.nusc.get_sample_data(self.image_token_list[index])
         filtered_annotations = self.filter_annotations(annotation[1])
         entities_list = self.convert_annotations(filtered_annotations, annotation[2])
-        return entities_list
+
+        # Apply occlusion filter
+        not_occluded_entities = []
+        for entity in entities_list:
+            if not self.relationship_extractor.is_occluded(entity, entities_list):
+                not_occluded_entities.append(entity)
+
+        return not_occluded_entities
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         sg_triplets = self.relationship_extractor.get_all_relationships(
