@@ -74,15 +74,8 @@ class KittiDataset(DatasetInterface):
         return annotations
 
     def data2entity(self, ann: dict, camera_intrinsic: numpy.ndarray = numpy.eye(3)) -> Entity:
-        entity_type = None
-        if ann['name'] == "Pedestrian" or ann['name'] == "Person_sitting":
-            entity_type = "person"
-        elif ann['name'] == "Cyclist":
-            entity_type = "bicycle"
-        elif ann['name'] == "Truck":
-            entity_type = "truck"
-        else:
-            entity_type = "car"
+        # Map the entity type
+        entity_type = self.entity_type_mapper(ann['name'])
         # Swap the length and the height of the bounding box
         whl = numpy.array([ann['dimensions']['height'], ann['dimensions']['width'], ann['dimensions']['length']])
         whl = whl.astype(float)
@@ -166,3 +159,12 @@ class KittiDataset(DatasetInterface):
             'camera_intrinsics': self.get_camera_intrinsic(index),
         }
         return obj
+
+    def entity_type_mapper(self, ann: str) -> str:
+        # https://medium.com/@abdulhaq.ah/explain-label-file-of-kitti-dataset-738528de36f4
+        if ann == "Pedestrian" or ann == "Person_sitting":
+            return "person"
+        elif ann == "Cyclist":
+            return "bicycle"
+        else:
+            return "vehicle"

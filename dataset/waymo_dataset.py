@@ -14,9 +14,10 @@ from dataset.utils.plot import ScenePlot
 
 
 ENTITY_TYPE = {
-    1: "CAR",
-    2: "PERSON",
-    4: "BICYCLE"
+    1: "vehicle",
+    2: "person",
+    3: "sign",
+    4: "bicycle"
 }
 
 
@@ -178,7 +179,7 @@ class WaymoDataset(DatasetInterface):
                     ll.camera_synced_box.length,  # dim x
                 ])
                 rotation = R.from_euler("z", ll.camera_synced_box.heading)
-                if ll.type in ENTITY_TYPE:
+                if ll.type != 3: # Ignore signs
                     camera_extrinsic = np.array(frame.context.camera_calibrations[0].extrinsic.transform).reshape(4, 4)
                     camera_intrinsic = np.array(frame.context.camera_calibrations[0].intrinsic).reshape(3, 3)
                     bb = self.box2bb(boxes[ll.id])
@@ -195,3 +196,7 @@ class WaymoDataset(DatasetInterface):
         width = box.width * 516 / 1280
         bb = int(center_x - length/2), int(center_y - width/2), int(center_x + length/2), int(center_y + width/2)
         return bb
+
+    def entity_type_mapper(self, ann:int) -> str:
+        # https://medium.com/@lattandreas/2d-detection-on-waymo-open-dataset-f111e760d15b
+        return ENTITY_TYPE[ann]

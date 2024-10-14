@@ -125,22 +125,8 @@ class NuscenesDataset(DatasetInterface):
         return llmsrp_annotations
 
     def box2entity(self, ann: Box, camera_intrinsic: np.ndarray = np.eye(3)) -> Entity:
-        entity_type = None
-        # TODO: Define a mapper for the entity types
-        if ann.name.startswith("human"):
-            entity_type = "person"
-        elif ann.name.startswith("vehicle"):
-            vehicle_type = ann.name.split(".")[1]
-            if vehicle_type == "construction":
-                entity_type = "construction_vehicle"
-            elif vehicle_type == "emergency":
-                entity_type = "emergency_vehicle"
-            elif vehicle_type == "trailer":
-                entity_type = "trailer_truck"
-            else:
-                entity_type = vehicle_type
-        else:
-            raise ValueError("Error: Unknown entity!")
+        # Map the entity type
+        entity_type = self.entity_type_mapper(ann.name)
         # Swap the length and the height of the bounding box
         w, l, h = ann.wlh
         whl = np.array([w, h, l])
@@ -160,3 +146,16 @@ class NuscenesDataset(DatasetInterface):
         image_path = self.get_image(index)
         self.scene_plot.plot_2d_bounding_boxes_from_corners(bbs=bbs, image_path=image_path,
                                                             out_path=out_path, entity_types=entities)
+
+    def entity_type_mapper(self, ann: str) -> str:
+        # https://www.nuscenes.org/nuscenes#data-annotation
+        entity_type = None
+        if ann.startswith("human"):
+            entity_type = "person"
+        elif ann.startswith("vehicle.bicycle"):
+            entity_type = "bicycle"
+        elif ann.startswith("vehicle"):
+            entity_type = "vehicle"
+        else:
+            raise ValueError("Error: Unknown entity!")
+        return entity_type

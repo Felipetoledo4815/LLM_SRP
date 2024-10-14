@@ -10,13 +10,7 @@ import numpy as np
 class EntityType(Enum):
     PERSON = (0, 0, 230)  # Blue
     BICYCLE = (220, 20, 60)  # Crimson
-    BUS = (255, 127, 80)  # Coral
-    CAR = (255, 158, 0)  # Orange
-    CONSTRUCTION_VEHICLE = (233, 150, 70)  # Darksalmon
-    EMERGENCY_VEHICLE = (255, 215, 0)  # Gold
-    MOTORCYCLE = (255, 61, 99)  # Red
-    TRAILER_TRUCK = (255, 140, 0)  # Darkorange
-    TRUCK = (255, 99, 71)  # Tomato
+    VEHICLE = (255, 158, 0)  # Orange
     EGO = (0, 0, 0)  # Black
 
     @property
@@ -268,3 +262,6 @@ class EgoVehicle(Entity):
         corners = np.dot(rot_test.as_matrix(), corners)
 
         return corners
+
+    def get_2d_bounding_box(self) -> None:
+        raise NotImplementedError("EgoVehicle does not have a 2D bounding box.")
