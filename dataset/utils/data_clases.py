@@ -90,7 +90,7 @@ class Entity:
         z_corners = h / 2 * np.array([1,  1, -1, -1,  1,  1, -1, -1])
         corners = np.vstack((x_corners, y_corners, z_corners))
 
-        # Rotate
+
         corners = np.dot(self.ypr.as_matrix(), corners)
 
         # Translate
@@ -98,7 +98,7 @@ class Entity:
         corners[0, :] = corners[0, :] + x
         corners[1, :] = corners[1, :] + y
         corners[2, :] = corners[2, :] + z
-
+        
         return corners
 
     @lru_cache()
