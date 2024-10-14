@@ -19,6 +19,14 @@ nuscenes = {
     "field_of_view": 66.4
 }
 
+# Kitti
+kitti = {
+    "root_folder": os.getenv("KITTI_3D_DATASET"),
+    "version": "data_object_image_2",
+    "verbose": False,
+    "field_of_view": 90
+}
+
 # Waymo validation
 waymo_validation = {
     "root_folder": os.getenv("WAYMO_VAL"),
