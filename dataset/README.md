@@ -17,7 +17,8 @@ This script will fill up the output_folder with jpg images and pkl labels, that 
 
 If you wish to download the whole dataset, you can do so by downloading the full training and test splits into 2 separate folders, and then running the above command for each of the folders containing the tfrecords. 
 
-**Note:** After downloading one file or the entire training or testing split, you will need to add `WAYMO_{SPLIT}` environment variable to your `.env` file, pointing to the "output" folder where the images and labels are stored.
+**Note:** After downloading one file or the entire training and validation split, you will need to add `WAYMO_{SPLIT}` environment variable to your `.env` file, pointing to the "output" folder where the images and labels are stored. The testing split do not have labels, so the framework will not be able to use it to extract SG triplets.
+
 
 ## KITTI
 [Kitti](https://www.cvlibs.net/datasets/kitti/) takes advantage of their autonomous driving platform "Annieway" to develop novel challenging real-world computer vision benchmarks. 
@@ -37,10 +38,10 @@ unzip data_object_calib.zip -d ./data_object_calib
 unzip data_object_image_2.zip -d ./data_object_image_2
 ```
 
-Then add `KITTI_3D_DATASET` environment variable your `.env` file, pointing to the "kitti_3d" folder where extracted all the files.
+Then add `KITTI` environment variable your `.env` file, pointing to the "kitti" folder where extracted all the files.
 
 ```bash
-KITTI_3D_DATASET={ABSOLUTE_PATH}/kitti_3d/
+KITTI={ABSOLUTE_PATH}/kitti/
 ```
 
 <!-- TODO: Add 'how-to-test' for all datasets.

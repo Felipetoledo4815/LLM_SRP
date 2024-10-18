@@ -16,7 +16,7 @@ def main():
 
     # Check if the output directory exists
     if not os.path.exists(args.output_path):
-        os.makedirs(args.output_path)
+        os.makedirs(args.output_path, exist_ok=True)
 
     # Data index
     idx = 0

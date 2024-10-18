@@ -24,10 +24,10 @@ class KittiDataset(DatasetInterface):
         self.__ego_vehicle_size__ = numpy.array([1.60, 1.73, 2.71])  # [width, height, length]
         self.__root_folder__ = config['root_folder'] if config['root_folder'].endswith(
             '/') else config['root_folder'] + '/'
-        self.__image_folder__ = self.__root_folder__ + config['version'] + '/training/image_2/'
+        self.__image_folder__ = self.__root_folder__ + f"/data_object_image_2/{config['partition']}/image_2/"
         self.list_of_images = self.parse_image_list_from_folder(self.__image_folder__)
-        self.__label_folder__ = self.__root_folder__ + 'data_object_label_2/training/label_2/'
-        self.__camera_calib_folder__ = self.__root_folder__ + 'data_object_calib/training/calib/'
+        self.__label_folder__ = self.__root_folder__ + f"data_object_label_2/{config['partition']}/label_2/"
+        self.__camera_calib_folder__ = self.__root_folder__ + f"data_object_calib/{config['partition']}/calib/"
         self.field_of_view = config['field_of_view']
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
         self.scene_plot = ScenePlot(field_of_view=self.field_of_view)
