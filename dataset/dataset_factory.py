@@ -7,7 +7,8 @@ from dataset.kitti_dataset import KittiDataset
 
 DATASET_CLASSES = {
     "nuscenes": NuscenesDataset,
-    "waymo": WaymoDataset,
+    "waymo_training": WaymoDataset,
+    "waymo_validation": WaymoDataset,
     "kitti": KittiDataset
 }
 

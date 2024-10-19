@@ -20,6 +20,7 @@ class TestLLMSRP(unittest.TestCase):
         self.assertEqual(len(llm_srp_dataset), llm_srp_dataset.length,
                          msg="All data should be used if no split is specified")
         llm_srp_dataset.set_split("train")
+
         self.assertAlmostEqual(len(llm_srp_dataset), int(llm_srp_dataset.length*0.75), delta=5,
                          msg="Train split should have 75 % of the data")
 
@@ -37,3 +38,25 @@ class TestLLMSRP(unittest.TestCase):
 
         with self.assertWarns(Warning):
             llm_srp_dataset = LLMSRPDataset(["nuscenes"], split="xyz", configs={"nuscenes": "nuscenes_mini"})
+
+    def test_multiple_datasets_splits(self):
+        llm_srp_dataset = LLMSRPDataset(["nuscenes", "kitti"],
+                                        configs={"nuscenes": "nuscenes_mini", "kitti": "kitti_training"})
+        self.assertEqual(len(llm_srp_dataset), llm_srp_dataset.length,
+                         msg="All data should be used if no split is specified")
+
+        llm_srp_dataset.set_split("train")
+        self.assertAlmostEqual(len(llm_srp_dataset), int(llm_srp_dataset.length*0.75), delta=5,
+                         msg="Train split should have 75 % of the data")
+
+        llm_srp_dataset = LLMSRPDataset(["nuscenes", "kitti"],
+                                        configs={"nuscenes": "nuscenes_mini", "kitti": "kitti_training"})
+        llm_srp_dataset.set_split("val")
+        self.assertAlmostEqual(len(llm_srp_dataset), int(llm_srp_dataset.length*0.05), delta=5,
+                         msg="Validation split should have 5 % of the data")
+
+        llm_srp_dataset = LLMSRPDataset(["nuscenes", "kitti"],
+                                        configs={"nuscenes": "nuscenes_mini", "kitti": "kitti_training"})
+        llm_srp_dataset.set_split("test")
+        self.assertAlmostEqual(len(llm_srp_dataset), int(llm_srp_dataset.length*0.20), delta=5,
+                         msg="Test split should have 20 % of the data")

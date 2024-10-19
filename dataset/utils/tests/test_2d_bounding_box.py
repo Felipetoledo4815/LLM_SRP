@@ -1,16 +1,17 @@
 import unittest
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from dataset.utils.data_clases import Entity
+from dataset.nuscenes_dataset import NuscenesEntity
 
 class Test2DBoundingBox(unittest.TestCase):
 
     def test_entity_bb(self):
-        entity = Entity(
-            entity_type='car',
+        entity = NuscenesEntity(
+            entity_type='vehicle',
             xyz=np.array([1, 1, 1]),
             whl=np.array([0, 0, 0]),
-            ypr=R.from_euler('z', 0, degrees=True)
+            rotation=R.from_euler('z', 0, degrees=True),
+            camera_intrinsic=np.eye(3)
         )
         bb = entity.get_2d_bounding_box()
         self.assertIsInstance(bb, tuple, "Bounding box should be a tuple")

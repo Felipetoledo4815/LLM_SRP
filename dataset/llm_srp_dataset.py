@@ -132,19 +132,20 @@ class LLMSRPDataset(Dataset):
                 new_indices = []
                 for dataset_name, _ in self.datasets.items():
                     indices_start = self.dataset_limits[dataset_name][0]
-                    indices_end = int(self.dataset_limits[dataset_name][1] * 0.75)
+                    indices_end = int(indices_start + (len(self.datasets[dataset_name]) * 0.75))
                     new_indices.extend(all_indices[indices_start:indices_end])
                 self.indices = new_indices
             elif split == "val":
                 new_indices = []
                 for dataset_name, _ in self.datasets.items():
-                    indices_start = int(self.dataset_limits[dataset_name][1] * 0.75)
-                    indices_end = int(self.dataset_limits[dataset_name][1] * 0.80)
+                    indices_start = int(self.dataset_limits[dataset_name][0] + (len(self.datasets[dataset_name]) * 0.75))
+                    indices_end = int(self.dataset_limits[dataset_name][0] + (len(self.datasets[dataset_name]) * 0.80))
                     new_indices.extend(all_indices[indices_start:indices_end])
                 self.indices = new_indices
             elif split == "test":
                 new_indices = []
                 for dataset_name, _ in self.datasets.items():
-                    indices_start = int(self.dataset_limits[dataset_name][1] * 0.80)
-                    new_indices.extend(all_indices[indices_start:])
+                    indices_start = int(self.dataset_limits[dataset_name][0] + (len(self.datasets[dataset_name]) * 0.80))
+                    indices_end = self.dataset_limits[dataset_name][1]
+                    new_indices.extend(all_indices[indices_start:indices_end])
                 self.indices = new_indices
