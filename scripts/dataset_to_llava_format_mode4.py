@@ -1,26 +1,49 @@
+from typing import List, Tuple
 import argparse
 import json
 import os
+import re
 from tqdm import tqdm
 from dataset.llm_srp_dataset import LLMSRPDataset, ImageFormat, TripletsFormat, BoundingBoxFormat
 
 
-def get_json_sample(idx: int, img: str, sg_triplets: str) -> dict:
+def get_json_sample(idx: int, img: str, bb: str, question: str, answer: str) -> dict:
     # Return sample in Llava format https://github.com/haotian-liu/LLaVA/blob/main/docs/Finetune_Custom_Data.md
     return {
         "id": idx,
         "image": img,
+        "bbox": bb[0],
         "conversations": [
             {
                 "from": "human",
-                "value": "<image>\nGive me the triplets."
+                "value": f"<image>\nIs the object in the red bounding box {question}?"
             },
             {
                 "from": "gpt",
-                "value": sg_triplets
+                "value": answer
             },
         ]
     }
+
+
+def get_rel_text(rel: str):
+    # Replace underscores with spaces
+    text_rel = rel.replace("_", " ")
+
+    # Replace 'm' following a number with 'meters'
+    text_rel = re.sub(r'(\d+)m', r'\1 meters', text_rel)
+
+    return text_rel
+
+
+def get_relationship_questions(relationships) -> Tuple[List[str], List[str]]:
+    questions = []
+    relations = []
+    for relationship in relationships:
+        questions.append(f"{relationship} of ego")
+        relations.append(relationship)
+    return questions, relations
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -44,17 +67,26 @@ def main():
         splits = ["train", "val", "test"]
     else:
         splits = [args.split]
+
+    relations = llm_srp_dataset.get_relationship_names()
+    all_rel_questions, all_relationships = get_relationship_questions(relations)
     for split in splits:
         print("Processing", split)
         list_of_json_samples = []
         llm_srp_dataset.set_split(split)
         for i in tqdm(range(len(llm_srp_dataset))):   # pylint: disable=C0200
-            img, sg_triplets, _ = llm_srp_dataset[i]
-            list_of_json_samples.append(get_json_sample(idx, str(img), str(sg_triplets)))
-            idx += 1
+            img, _, bbs = llm_srp_dataset[i]
+            for bb in bbs:
+                bb_relations = [triplet[1] for triplet in bb[1]]
+                for rel_question, relationship in zip(all_rel_questions, all_relationships):
+                    if relationship in bb_relations:
+                        list_of_json_samples.append(get_json_sample(idx, str(img), bb, get_rel_text(rel_question), "yes"))
+                    else:
+                        list_of_json_samples.append(get_json_sample(idx, str(img), bb, get_rel_text(rel_question), "no"))
+                    idx += 1
 
         # Save to file
-        with open(f"{args.output_dir}/llava_dataset_{split}.json", "w", encoding="utf-8") as f:
+        with open(f"{args.output_dir}/llava_dataset_{split}_mode4.json", "w", encoding="utf-8") as f:
             f.write(json.dumps(list_of_json_samples))
 
 

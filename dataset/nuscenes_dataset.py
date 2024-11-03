@@ -4,6 +4,7 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import Box
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+import os
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
 from dataset.utils.relationship_extractor import RelationshipExtractor
@@ -48,8 +49,23 @@ class NuscenesDataset(DatasetInterface):
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
         self.scene_plot = ScenePlot(field_of_view=self.field_of_view)
 
+        # Filter by images available
+        new_image_token_list = []
+        new_image_path_list = []
+        new_ego_pose_token_list = []
+        img_folder_path = self.__root_folder__ + "samples/CAM_FRONT/"
+        img_folder_list = os.listdir(img_folder_path)
+        for img_token, img_path, ego_pose in zip(self.image_token_list, self.image_path_list, self.ego_pose_token_list):
+            if img_path.split("/")[-1] in img_folder_list:
+                new_image_token_list.append(img_token)
+                new_image_path_list.append(img_path)
+                new_ego_pose_token_list.append(ego_pose)
+        self.image_token_list = new_image_token_list
+        self.image_path_list = new_image_path_list
+        self.ego_pose_token_list = new_ego_pose_token_list
+
     def __len__(self) -> int:
-        return len(self.sample_token_list)
+        return len(self.image_token_list)
 
     def get_image(self, index: int) -> str:
         return self.image_path_list[index]

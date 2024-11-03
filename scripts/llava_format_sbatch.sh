@@ -8,5 +8,11 @@
 #SBATCH --account=lesslab
 
 split=$1
+mode=$2
 
-python scripts/dataset_to_llava_format.py --split $split
+module load miniforge
+
+conda deactivate
+conda activate .llm_srp/
+
+python scripts/dataset_to_llava_format_mode"$mode".py --split $split
