@@ -1,20 +1,16 @@
 from typing import Tuple, List
 from enum import Enum, auto
+from functools import lru_cache
 from scipy.spatial.transform import Rotation as R
 from matplotlib import patches
 from matplotlib.axes import Axes
 import numpy as np
 
+
 class EntityType(Enum):
     PERSON = (0, 0, 230)  # Blue
     BICYCLE = (220, 20, 60)  # Crimson
-    BUS = (255, 127, 80)  # Coral
-    CAR = (255, 158, 0)  # Orange
-    CONSTRUCTION_VEHICLE = (233, 150, 70)  # Darksalmon
-    EMERGENCY_VEHICLE = (255, 215, 0)  # Gold
-    MOTORCYCLE = (255, 61, 99)  # Red
-    TRAILER_TRUCK = (255, 140, 0)  # Darkorange
-    TRUCK = (255, 99, 71)  # Tomato
+    VEHICLE = (255, 158, 0)  # Orange
     EGO = (0, 0, 0)  # Black
 
     @property
@@ -31,7 +27,8 @@ class EntityType(Enum):
 
     @classmethod
     def from_str(cls, entity_type: str) -> 'EntityType':
-        assert entity_type.lower() in cls.get_types(), f"Entity {entity_type} not recognized. Please add it to EntityType."
+        assert entity_type.lower() in cls.get_types(
+        ), f"Entity {entity_type} not recognized. Please add it to EntityType."
         return cls[entity_type.upper()]
 
 
@@ -86,20 +83,64 @@ class Entity:
         y_corners = w / 2 * np.array([1, -1, -1,  1,  1, -1, -1,  1])
         z_corners = h / 2 * np.array([1,  1, -1, -1,  1,  1, -1, -1])
         corners = np.vstack((x_corners, y_corners, z_corners))
+
+        # Rotate
         corners = np.dot(self.ypr.as_matrix(), corners)
+
         # Translate
         x, y, z = self.xyz
         corners[0, :] = corners[0, :] + x
         corners[1, :] = corners[1, :] + y
         corners[2, :] = corners[2, :] + z
+
         return corners
 
+    @lru_cache()
     def bottom_corners(self) -> np.ndarray:
         """
         Returns the four bottom corners.
         :return: <np.float: 3, 4>. Bottom corners. First two face forward, last two face backwards.
         """
         return self.corners()[:, [2, 3, 7, 6]]
+
+    @lru_cache()
+    def top_corners(self) -> np.ndarray:
+        """
+        Returns the four top corners.
+        :return: <np.float: 3, 4>. top corners. First two face forward, last two face backwards.
+        """
+        return self.corners()[:, [1, 0, 4, 5]]
+
+    @lru_cache()
+    def top_center_point(self) -> np.ndarray:
+        """
+        Returns the center of the top face of the box.
+        :return: <np.float: 3>. The center of the top face of the box.
+        """
+        return np.mean(self.top_corners(), axis=1)
+
+    @lru_cache()
+    def lateral_planes(self) -> List[dict]:
+        """
+        Returns the four lateral planes.
+        :return: <np.float: 3, 4>. Lateral planes.
+        """
+        corners = self.corners()
+        bottom_corners = corners[:, [2, 3, 7, 6]]
+        top_corners = corners[:, [1, 0, 4, 5]]
+        planes = []
+        for i in range(4):
+            next_i = (i + 1) % 4
+            p1 = bottom_corners[:, i]
+            p2 = bottom_corners[:, next_i]
+            p3 = top_corners[:, i]
+            p4 = top_corners[:, next_i]
+            v1 = p1 - p2
+            v2 = p3 - p1
+            normal = np.cross(v1, v2)
+            d = np.dot(normal, p1)
+            planes.append({'normal': normal, 'd': d, 'points': [p1, p2, p3, p4]})
+        return planes
 
     def render(self,
                axis: Axes,
@@ -221,3 +262,6 @@ class EgoVehicle(Entity):
         corners = np.dot(rot_test.as_matrix(), corners)
 
         return corners
+
+    def get_2d_bounding_box(self) -> None:
+        raise NotImplementedError("EgoVehicle does not have a 2D bounding box.")

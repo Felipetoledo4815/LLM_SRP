@@ -1,4 +1,6 @@
+import argparse
 import json
+import os
 from tqdm import tqdm
 from dataset.llm_srp_dataset import LLMSRPDataset, ImageFormat, TripletsFormat, BoundingBoxFormat
 
@@ -21,10 +23,28 @@ def get_json_sample(idx: int, img: str, sg_triplets: str) -> dict:
     }
 
 def main():
-    llm_srp_dataset = LLMSRPDataset(["nuscenes"], output_format=(
-        ImageFormat.DEFAULT, TripletsFormat.DEFAULT, BoundingBoxFormat.DEFAULT), configs={"nuscenes": "nuscenes"})
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output_dir", type=str, default="./hf_llm_srp", help="Dataset output folder.")
+    parser.add_argument("--split", type=str, default="all", choices=["train", "val", "test", "all"], help="Dataset split to process.")
+    args = parser.parse_args()
+
+    # Check if output_dir exists
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir, exist_ok=True)
+
+    llm_srp_dataset = LLMSRPDataset(["nuscenes", "kitti", "waymo_training", "waymo_validation"], output_format=(
+        ImageFormat.DEFAULT, TripletsFormat.DEFAULT, BoundingBoxFormat.DEFAULT), configs={
+            "nuscenes": "nuscenes",
+            "kitti": "kitti_training",
+            "waymo_training": "waymo_training",
+            "waymo_validation": "waymo_validation",
+            })
     idx = 0
-    for split in ["train", "val", "test"]:
+    if args.split == "all":
+        splits = ["train", "val", "test"]
+    else:
+        splits = [args.split]
+    for split in splits:
         print("Processing", split)
         list_of_json_samples = []
         llm_srp_dataset.set_split(split)
@@ -34,7 +54,7 @@ def main():
             idx += 1
 
         # Save to file
-        with open(f"llava_dataset_{split}.json", "w", encoding="utf-8") as f:
+        with open(f"{args.output_dir}/llava_dataset_{split}_mode1.json", "w", encoding="utf-8") as f:
             f.write(json.dumps(list_of_json_samples))
 
 

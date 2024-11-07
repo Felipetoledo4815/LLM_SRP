@@ -10,7 +10,7 @@ class TestRelationshipExtractor(unittest.TestCase):
 
     def test_get_distance(self):
         entity = Entity(
-            entity_type='car',
+            entity_type='vehicle',
             xyz=np.array([1, 1, 1]),
             whl=np.array([0, 0, 0]),
             ypr=R.from_euler('z', 0, degrees=True)
@@ -33,14 +33,14 @@ class TestRelationshipExtractor(unittest.TestCase):
         )
         for i, expectation in [(1, "within_25m"), (25, "between_25m_and_40m"), (40, "between_40m_and_60m"), (1000, None)]:
             entity = Entity(
-                entity_type='car',
+                entity_type='vehicle',
                 xyz=np.array([i, i, i]),
                 whl=np.array([0, 0, 0]),
                 ypr=R.from_euler('z', 0, degrees=True)
             )
             discrete_distance_rel = relationship_extractor.get_discrete_distance_rel(entity, ego_vehicle)
             if discrete_distance_rel:
-                self.assertEqual(discrete_distance_rel, ("car", expectation, "ego"))
+                self.assertEqual(discrete_distance_rel, ("vehicle", expectation, "ego"))
             else:
                 self.assertIsNone(discrete_distance_rel)
 
@@ -56,7 +56,7 @@ class TestRelationshipExtractor(unittest.TestCase):
             ypr=R.from_euler('z', 0, degrees=True)
         )
         entity = Entity(
-            entity_type='car',
+            entity_type='vehicle',
             xyz=np.array([0, 0, 0]),
             whl=np.array([0, 0, 0]),
             ypr=R.from_euler('z', 0, degrees=True)
@@ -79,7 +79,7 @@ class TestRelationshipExtractor(unittest.TestCase):
             ypr=R.from_euler('z', 0, degrees=True)
         )
         entity = Entity(
-            entity_type='car',
+            entity_type='vehicle',
             xyz=np.array([0, 0, 0]),
             whl=np.array([0, 0, 0]),
             ypr=R.from_euler('z', 0, degrees=True)

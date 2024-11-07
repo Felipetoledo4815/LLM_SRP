@@ -101,3 +101,4 @@ tzdata==2024.1
 urllib3==2.2.2
 wcwidth==0.2.13
 wheel==0.43.0
+waymo_open_dataset_tf_2_12_0==1.6.2

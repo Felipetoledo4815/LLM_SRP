@@ -1,8 +1,10 @@
 from typing import List, Tuple
+from functools import lru_cache
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import Box
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+import os
 from dataset.dataset_interface import DatasetInterface
 from dataset.utils.data_clases import Entity, EgoVehicle
 from dataset.utils.relationship_extractor import RelationshipExtractor
@@ -47,8 +49,23 @@ class NuscenesDataset(DatasetInterface):
         self.relationship_extractor = RelationshipExtractor(field_of_view=self.field_of_view)
         self.scene_plot = ScenePlot(field_of_view=self.field_of_view)
 
+        # Filter by images available
+        new_image_token_list = []
+        new_image_path_list = []
+        new_ego_pose_token_list = []
+        img_folder_path = self.__root_folder__ + "samples/CAM_FRONT/"
+        img_folder_list = os.listdir(img_folder_path)
+        for img_token, img_path, ego_pose in zip(self.image_token_list, self.image_path_list, self.ego_pose_token_list):
+            if img_path.split("/")[-1] in img_folder_list:
+                new_image_token_list.append(img_token)
+                new_image_path_list.append(img_path)
+                new_ego_pose_token_list.append(ego_pose)
+        self.image_token_list = new_image_token_list
+        self.image_path_list = new_image_path_list
+        self.ego_pose_token_list = new_ego_pose_token_list
+
     def __len__(self) -> int:
-        return len(self.sample_token_list)
+        return len(self.image_token_list)
 
     def get_image(self, index: int) -> str:
         return self.image_path_list[index]
@@ -65,11 +82,19 @@ class NuscenesDataset(DatasetInterface):
         ego_vehicle = EgoVehicle(xyz, self.__ego_vehicle_size__, rotation)
         return ego_vehicle
 
+    @lru_cache()
     def get_entities(self, index: int) -> List[Entity]:
         annotation = self.nusc.get_sample_data(self.image_token_list[index])
         filtered_annotations = self.filter_annotations(annotation[1])
         entities_list = self.convert_annotations(filtered_annotations, annotation[2])
-        return entities_list
+
+        # Apply occlusion filter
+        not_occluded_entities = []
+        for entity in entities_list:
+            if not self.relationship_extractor.is_occluded(entity, entities_list):
+                not_occluded_entities.append(entity)
+
+        return not_occluded_entities
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         sg_triplets = self.relationship_extractor.get_all_relationships(
@@ -116,22 +141,8 @@ class NuscenesDataset(DatasetInterface):
         return llmsrp_annotations
 
     def box2entity(self, ann: Box, camera_intrinsic: np.ndarray = np.eye(3)) -> Entity:
-        entity_type = None
-        # TODO: Define a mapper for the entity types
-        if ann.name.startswith("human"):
-            entity_type = "person"
-        elif ann.name.startswith("vehicle"):
-            vehicle_type = ann.name.split(".")[1]
-            if vehicle_type == "construction":
-                entity_type = "construction_vehicle"
-            elif vehicle_type == "emergency":
-                entity_type = "emergency_vehicle"
-            elif vehicle_type == "trailer":
-                entity_type = "trailer_truck"
-            else:
-                entity_type = vehicle_type
-        else:
-            raise ValueError("Error: Unknown entity!")
+        # Map the entity type
+        entity_type = self.entity_type_mapper(ann.name)
         # Swap the length and the height of the bounding box
         w, l, h = ann.wlh
         whl = np.array([w, h, l])
@@ -151,3 +162,16 @@ class NuscenesDataset(DatasetInterface):
         image_path = self.get_image(index)
         self.scene_plot.plot_2d_bounding_boxes_from_corners(bbs=bbs, image_path=image_path,
                                                             out_path=out_path, entity_types=entities)
+
+    def entity_type_mapper(self, ann: str) -> str:
+        # https://www.nuscenes.org/nuscenes#data-annotation
+        entity_type = None
+        if ann.startswith("human"):
+            entity_type = "person"
+        elif ann.startswith("vehicle.bicycle"):
+            entity_type = "bicycle"
+        elif ann.startswith("vehicle"):
+            entity_type = "vehicle"
+        else:
+            raise ValueError("Error: Unknown entity!")
+        return entity_type

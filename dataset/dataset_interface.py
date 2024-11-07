@@ -37,5 +37,9 @@ class DatasetInterface(ABC):
         """Plot bounding box given an index, and bounding boxes"""
 
     @abstractmethod
+    def entity_type_mapper(self, ann) -> str:
+        """Maps entity type to 'vehicle', 'person', or 'bicycle'"""
+
+    @abstractmethod
     def __len__(self) -> int:
         """Returns length of the dataset"""

@@ -1,9 +1,9 @@
 from dataset.kitti_dataset import KittiDataset
-from dataset.config import kitti_3d_dataset
+from dataset.config import kitti
 
 
 def main():
-    d = KittiDataset(kitti_3d_dataset)
+    d = KittiDataset(kitti)
     # triplets = d.get_sg_triplets(0)
     # img_path = d.get_image(10)
     # e = d.get_ego_vehicle(120)

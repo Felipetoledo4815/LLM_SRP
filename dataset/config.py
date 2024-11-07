@@ -19,12 +19,17 @@ nuscenes = {
     "field_of_view": 66.4
 }
 
-#kitti
-kitti_3d_dataset = {
-    "root_folder": os.getenv("KITTI_3D_DATASET"),
-    "version": "data_object_image_2",
-    "verbose": False,
+# Kitti training
+kitti_training = {
+    "root_folder": os.getenv("KITTI"),
+    "partition": "training",
     "field_of_view": 90
+}
+
+# Waymo training
+waymo_training = {
+    "root_folder": os.getenv("WAYMO_TRAIN"),
+    "field_of_view": 50.4   # https://arxiv.org/pdf/1912.04838
 }
 
 # Waymo validation
@@ -32,5 +37,3 @@ waymo_validation = {
     "root_folder": os.getenv("WAYMO_VAL"),
     "field_of_view": 50.4   # https://arxiv.org/pdf/1912.04838
 }
-
-

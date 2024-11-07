@@ -2,11 +2,14 @@ from typing import List, Dict
 from dataset import config
 from dataset.nuscenes_dataset import NuscenesDataset
 from dataset.waymo_dataset import WaymoDataset
+from dataset.kitti_dataset import KittiDataset
 
 
 DATASET_CLASSES = {
     "nuscenes": NuscenesDataset,
-    "waymo": WaymoDataset
+    "waymo_training": WaymoDataset,
+    "waymo_validation": WaymoDataset,
+    "kitti": KittiDataset
 }
 
 
@@ -19,8 +22,7 @@ class DatasetFactory:
             d_config = d
             if configs is not None and d in configs.keys():
                 d_config = configs[d]
-                print(d_config)
-            self.datasets[d] = d_class(getattr(config, d_config)) # getattr is basically passing the config of d_config to NuscenesDataset class
+            self.datasets[d] = d_class(getattr(config, d_config))
 
     def get_datasets(self) -> dict:
         return self.datasets
