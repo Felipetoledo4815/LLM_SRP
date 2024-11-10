@@ -1,12 +1,13 @@
 from typing import List
 import math
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt1
 import numpy as np
 import statistics
 from PIL import Image
 from matplotlib.axes import Axes
 from matplotlib import patches
-from dataset.utils.data_clases import Entity, EgoVehicle, EntityType
+from dataset.utils.data_clases import Entity, EgoVehicle, EntityType, LaneLine
 
 
 class ScenePlot:
@@ -14,7 +15,7 @@ class ScenePlot:
         self.field_of_view = field_of_view
 
     def render_scene(self, ego_vehicle: EgoVehicle, entities: List[Entity], image_path: str,
-                     out_path: None | str = None, title: None | str = None) -> None:
+                     out_path: None | str = None, title: None | str = None, lane_lines: None | List[LaneLine] = None) -> None:
 
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -24,6 +25,28 @@ class ScenePlot:
 
         for entity in entities:
             entity.render(axs[1], colors=entity.get_color(), linewidth=2)
+
+
+        if lane_lines is not None:
+            # fig = plt1.figure()
+            # ax = fig.add_subplot(111, projection='3d')
+            for lane_line in lane_lines:
+                # Plot each line
+                # ax.plot(lane_line.xyz[0], lane_line.xyz[1], lane_line.xyz[2], marker='o')  # Change color and marker as needed
+                lane_line.render(axs[1], colors=ego_vehicle.get_color(), linewidth=1)
+
+            # for entity in entities:
+            #     entity.render3d(ax, colors=entity.get_color(), linewidth=2)
+            #
+            # # Add labels and title for clarity
+            # ax.set_xlabel('X Axis')
+            # ax.set_ylabel('Y Axis')
+            # ax.set_zlabel('Z Axis')
+            # ax.set_title('3D Plot of Multiple Lines')
+
+            # Show the plot
+            # plt1.show()
+
 
         ego_vehicle.render(axs[1], colors=ego_vehicle.get_color(), linewidth=2)
         self.__plot_fov__(axs[1], ego_vehicle)

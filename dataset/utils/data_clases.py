@@ -5,6 +5,8 @@ from scipy.spatial.transform import Rotation as R
 from matplotlib import patches
 from matplotlib.axes import Axes
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 class EntityType(Enum):
@@ -265,3 +267,39 @@ class EgoVehicle(Entity):
 
     def get_2d_bounding_box(self) -> None:
         raise NotImplementedError("EgoVehicle does not have a 2D bounding box.")
+
+class LaneLine:
+    def __init__(self, lane_label: str, xyz: np.ndarray) -> None:
+        # Entity type
+        self.lane_label = lane_label
+        # List of lane line coordinates
+        self.xyz = xyz
+        # rotation
+        # self.rotation = rotation  rotation: R,
+        # Camera intrinsic matrix
+        # self.camera_intrinsic = camera_intrinsic
+
+    def render(self,
+               axis: Axes,
+               colors: np.ndarray,
+               linewidth: float = 2) -> None:
+        """
+        Renders the box in the provided Matplotlib axis.
+        :param axis: Axis onto which the box should be drawn.
+        :param colors: (<Matplotlib.colors>: 3). Valid Matplotlib colors (<str> or normalized RGB tuple) for front,
+            back and sides.
+        :param linewidth: Width in pixel of the box sides.
+        """
+        # rotated_line_points = np.dot(self.rotation.as_matrix(), self.xyz.T).T
+        rotated_line_points = self.xyz
+        rot = R.from_euler('z', np.pi / 2)
+        xyz_transposed = rotated_line_points.T
+        #
+        # # Apply the rotation to each point
+        xyz_rotated = rot.apply(xyz_transposed)
+        xyz = xyz_rotated.T
+        # corners = np.dot(rot.as_matrix(), corners)
+        # Apply the rotation to each point
+        axis.plot(xyz[0],xyz[1], color=colors, linewidth=linewidth)
+
+
