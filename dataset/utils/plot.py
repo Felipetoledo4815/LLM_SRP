@@ -33,7 +33,17 @@ class ScenePlot:
             for lane_line in lane_lines:
                 # Plot each line
                 # ax.plot(lane_line.xyz[0], lane_line.xyz[1], lane_line.xyz[2], marker='o')  # Change color and marker as needed
-                lane_line.render(axs[1], colors=ego_vehicle.get_color(), linewidth=1)
+                if lane_line.attribute == 1 or lane_line.attribute == 2:
+                        color = np.array((255, 158, 0)) / 255.0
+
+                elif lane_line.attribute == 3 or lane_line.attribute == 4:
+                        color = np.array((0, 0, 230)) / 255.0
+                else:
+                    track = int(lane_line.track_id * 10)
+                    color = np.array((track, int(lane_line.category) * 9, 145)) / 255.0
+
+
+                lane_line.render(axs[1], colors=color, linewidth=1)
 
             # for entity in entities:
             #     entity.render3d(ax, colors=entity.get_color(), linewidth=2)

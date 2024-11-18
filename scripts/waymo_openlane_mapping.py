@@ -61,9 +61,8 @@ def main():
                 print("File exists.")
                 with open(lane_data_json_path, 'r') as f:
                     data = json.load(f)
-                    print(len(data['lane_lines']))
                     lane_label = {
-                        "lane_label": data['lane_lines']
+                        "lane_label": data['lane_lines'],
                     }
                 
                 # Writing to sample.json

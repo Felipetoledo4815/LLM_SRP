@@ -4,7 +4,7 @@ from dataset.config import open_lane_v1
 
 def main():
     d = OpenLaneV1Dataset(open_lane_v1)
-    d.plot_data_point(19, "test.jpg")
+    d.plot_data_point(146, "test.jpg")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,62 @@ class RelationshipExtractor:
     def __init__(self, field_of_view: float = 180) -> None:
         self.field_of_view = field_of_view
 
+    def is_point_right_of_line_segments(self, line_points, point):
+        px, py = point
+        x, y, z = line_points
+        for i in range(len(x)):
+            x1, y1 = x[i], y[i]
+
+            if y1 + 1 < py:
+                continue
+
+            if x1 > px:
+                # print(f"{x[0]} right {x1}")
+                return False
+            if y1 > py:
+                break
+
+        return True
+
+    def is_point_left_of_line_segments(self, line_points, point):
+        px, py = point
+        x, y, z = line_points
+        for i in range(len(x)):
+            x1, y1 = x[i], y[i]
+
+            if y1 + 1 < py:
+                continue
+
+            if x1 < px:
+                # print(f"{x[0]} left {x1}")
+                return False
+            if y1 > py:
+                break
+
+        return True
+
+    def get_lanes_on_opposing_lane(self, entities, left_most_line):
+        for entity in entities:
+            center_point = entity.get_projected_center_point()
+            if self.is_point_left_of_line_segments(left_most_line, center_point):
+                print(f"{entity.entity_type} is in Opposing lane")
+
+    def get_all_lane_entity_relationship(self, entities: List[Entity], lanes):
+        entities_not_in_lane = []
+        for entity in entities:
+            center_point = entity.get_projected_center_point()
+            for lane in lanes:
+                if (self.is_point_right_of_line_segments(lane['left_line_of_lane'].xyz, center_point) and
+                        self.is_point_left_of_line_segments(lane['right_line_of_lane'].xyz, center_point)):
+                    print(f"{entity.entity_type} is in lane {lane['lane_position']}")
+                    break
+            entities_not_in_lane.append(entity)
+
+        if len(entities_not_in_lane) > 0:
+            self.get_lanes_on_opposing_lane(entities_not_in_lane, lanes[0]['left_line_of_lane'].xyz)
+
+
+
     def get_all_relationships(self, entities: List[Entity], ego_vehicle: EgoVehicle) -> List[Tuple[str, str, str]]:
         relationships = []
         for entity in entities:

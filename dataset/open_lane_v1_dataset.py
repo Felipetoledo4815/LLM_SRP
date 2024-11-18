@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Tuple
 from functools import lru_cache
 import os
@@ -105,6 +106,10 @@ class OpenLaneV1Dataset(DatasetInterface):
 
         return not_occluded_entities
 
+    def get_lane_relation(self, entities: List[Entity], lanes):
+        self.relationship_extractor.get_all_lane_entity_relationship(entities, lanes)
+        return
+
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         """Returns list of scene graph triplets given an index"""
         sg_triplets = self.relationship_extractor.get_all_relationships(
@@ -122,8 +127,11 @@ class OpenLaneV1Dataset(DatasetInterface):
         ego_vehicle = self.get_ego_vehicle(index)
         entities = self.get_entities(index)
         image_path = self.get_image(index)
-        lanes = self.get_lanes(index)
-        self.scene_plot.render_scene(ego_vehicle, entities, image_path, out_path, title=f"Sample {index}", lane_lines=lanes)
+        lane_lines = self.get_lanes(index)
+        lanes = self.get_lane_line_pairs(lane_lines)
+        print(lanes[0])
+        self.get_lane_relation(entities, lanes)
+        self.scene_plot.render_scene(ego_vehicle, entities, image_path, out_path, title=f"Sample {index}", lane_lines=lane_lines)
 
     def plot_bounding_box(self, index: int, bbs: List[str], entities: List[str] | None = None,
                           out_path: None | str = None) -> None:
@@ -134,6 +142,87 @@ class OpenLaneV1Dataset(DatasetInterface):
     def __len__(self) -> int:
         """Returns length of the dataset"""
         return len(self.images_path)
+
+    def merge_lane_lines_by_attributes(self, lane_lines, attribute_values = [1, 2, 3, 4]):
+
+        new_lane_lines = [line for line in lane_lines if line.attribute not in attribute_values]
+
+        for attr_value in attribute_values:
+            # Filter lane lines with the current attribute value
+            filtered_lines = [line for line in lane_lines if line.attribute == attr_value]
+
+            if filtered_lines:
+                # Merge xyz arrays from filtered lane lines
+                merged_xyz = np.concatenate([line.xyz for line in filtered_lines], axis=1)
+
+                sorted_indices = np.argsort(merged_xyz[1])
+
+                # Rearrange both rows of arr based on the sorted indices of arr[1]
+                sorted_xyz = merged_xyz[:, sorted_indices]
+
+                # Create a new LaneLine object
+                merged_lane_line = LaneLine(
+                    category=filtered_lines[0].category,  # Set category indicating merge
+                    xyz=sorted_xyz,
+                    track_id=filtered_lines[0].track_id,  # Set a track ID indicating merge
+                    attribute=attr_value
+                )
+
+                # Append the new merged lane line
+                new_lane_lines.append(merged_lane_line)
+
+        return new_lane_lines
+
+    def get_lane_line_pairs(self, sorted_lane_line_list):
+        # starting from left
+        lanes = []
+        number_of_left_lanes = 0
+
+        for idx, line in enumerate(sorted_lane_line_list):
+            if idx == len(sorted_lane_line_list) - 1:
+                continue
+
+            if sorted_lane_line_list[idx].xyz[0][0] < 0 and sorted_lane_line_list[idx + 1].xyz[0][0] < 0:
+                lanes.append({
+                    "left_line_of_lane": sorted_lane_line_list[idx],
+                    "right_line_of_lane": sorted_lane_line_list[idx + 1],
+                    "lane_position": "left lane " + str(idx + 1)
+                })
+                number_of_left_lanes += 1
+
+            elif sorted_lane_line_list[idx].xyz[0][0] > 0 and sorted_lane_line_list[idx+1].xyz[0][0] > 0:
+                lanes.append({
+                    "left_line_of_lane": sorted_lane_line_list[idx],
+                    "right_line_of_lane": sorted_lane_line_list[idx + 1],
+                    "lane_position": "right lane " + str(idx - number_of_left_lanes)
+                })
+
+            elif sorted_lane_line_list[idx].xyz[0][0] < 0 and sorted_lane_line_list[idx + 1].xyz[0][0] > 0:
+                lanes.append({
+                    "left_line_of_lane": sorted_lane_line_list[idx],
+                    "right_line_of_lane": sorted_lane_line_list[idx + 1],
+                    "lane_position": "EGO LANE"
+                })
+
+            else:
+                print("We have an issue as on lane is EGO")
+
+        for item in lanes:
+            if "left lane " in item["lane_position"]:
+                item["lane_position"] = "left lane " + str(number_of_left_lanes)
+                number_of_left_lanes -= 1
+
+        for item in lanes:
+            if item["left_line_of_lane"].xyz[0][0] > item["right_line_of_lane"].xyz[0][1]:
+                temp = item["left_line_of_lane"]
+                item["left_line_of_lane"] = item["right_line_of_lane"]
+                item["right_line_of_lane"] = temp
+
+        for item in lanes:
+            print(f"Lane position {item['lane_position']}, x coordinate left {item['left_line_of_lane'].xyz[0][0]}, "
+                  f"x coordinate right {item['right_line_of_lane'].xyz[0][0]}, left attribute {item['left_line_of_lane'].attribute}, right attribute {item['right_line_of_lane'].attribute}")
+
+        return lanes
 
     def frame2lane(self, data):
         number_of_lane_lines = len(data["lane_label"])
@@ -149,16 +238,44 @@ class OpenLaneV1Dataset(DatasetInterface):
             filtered_z = []
 
             for x, y, z in zip(x_points, y_points, z_points):
-                if x < 100:
+                if x < 90:
                     filtered_x.append(x)
                     filtered_y.append(y)
                     filtered_z.append(z)
 
             xyz = np.array([filtered_x,filtered_y,filtered_z])
-            print("line number " + str(idx+1) + " number of points are " + str(len(xyz)))
-            lane_line = LaneLine("left", xyz)
+            # rotation
+            rotated_line_points = xyz
+            rot = R.from_euler('z', np.pi / 2)
+            xyz_transposed = rotated_line_points.T
+            xyz_rotated = rot.apply(xyz_transposed)
+            xyz = xyz_rotated.T
+
+            min_value_y = np.min(xyz[1])
+
+            if min_value_y > 50:
+                continue
+
+
+            lane_line = LaneLine(line["category"], xyz, line["track_id"], line["attribute"])
             lane_lines.append(lane_line)
-        return lane_lines
+
+        # Sort the LaneLine objects by the x-coordinate of their first point
+        print(f"number of lane line {len(lane_lines)}")
+        merged_line = self.merge_lane_lines_by_attributes(lane_lines)
+        print(f"number of merged lane line {len(merged_line)}")
+        sorted_lane_lines = sorted(merged_line, key=lambda line: line.xyz[0, 0])
+
+        # # Print the category and tracking ID of the sorted objects
+        # for line in sorted_lane_lines:
+        #     print(f"Category: {line.category}, Tracking ID: {line.track_id}, Attribute: {line.attribute}, start x: {line.xyz[0][0]}")
+        #     if line.xyz[0][0] < 0:
+        #         arr = np.insert(line.xyz[0], 0, line.xyz[0][0])
+        #         arr1 = np.insert(line.xyz[1], 0, 0)
+        #         arr2 = np.insert(line.xyz[2], 0, 0)
+        #
+        #         line.xyz = np.array([arr,arr1,arr2])
+        return sorted_lane_lines
 
     def frame2entities(self, frame: dict) -> List[Entity]:
         entities = []

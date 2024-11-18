@@ -33,6 +33,11 @@ class EntityType(Enum):
         ), f"Entity {entity_type} not recognized. Please add it to EntityType."
         return cls[entity_type.upper()]
 
+class LaneRelationShipType(Enum):
+    OPPOSING_SIDE = auto()
+    LEFT_MOST_LANE_OF_EGO = auto()
+    RIGHT_MOST_LANE_OF_EGO = auto()
+
 
 class RelationshipType(Enum):
     WITHIN_25M = auto()
@@ -268,16 +273,33 @@ class EgoVehicle(Entity):
     def get_2d_bounding_box(self) -> None:
         raise NotImplementedError("EgoVehicle does not have a 2D bounding box.")
 
+
+# class LaneCategory:
+#     0: 'unkown',
+#     1: 'white-dash',
+#     2: 'white-solid', 
+#     3: 'double-white-dash',
+#     4: 'double-white-solid',
+#     5: 'white-ldash-rsolid',
+#     6: 'white-lsolid-rdash',
+#     7: 'yellow-dash',
+#     8: 'yellow-solid',
+#     9: 'double-yellow-dash',
+#     10: 'double-yellow-solid',
+#     11: 'yellow-ldash-rsolid',
+#     12: 'yellow-lsolid-rdash',
+#     20: 'left-curbside',
+#     21: 'right-curbside'
+
 class LaneLine:
-    def __init__(self, lane_label: str, xyz: np.ndarray) -> None:
+    def __init__(self, category, xyz: np.ndarray, track_id, attribute) -> None:
         # Entity type
-        self.lane_label = lane_label
+        self.category = category 
         # List of lane line coordinates
         self.xyz = xyz
-        # rotation
-        # self.rotation = rotation  rotation: R,
-        # Camera intrinsic matrix
-        # self.camera_intrinsic = camera_intrinsic
+        self.track_id = track_id
+        self.attribute = attribute
+        
 
     def render(self,
                axis: Axes,
@@ -291,15 +313,18 @@ class LaneLine:
         :param linewidth: Width in pixel of the box sides.
         """
         # rotated_line_points = np.dot(self.rotation.as_matrix(), self.xyz.T).T
-        rotated_line_points = self.xyz
-        rot = R.from_euler('z', np.pi / 2)
-        xyz_transposed = rotated_line_points.T
-        #
-        # # Apply the rotation to each point
-        xyz_rotated = rot.apply(xyz_transposed)
-        xyz = xyz_rotated.T
+        # moved to data wrapper class
+        # rotated_line_points = self.xyz
+        # rot = R.from_euler('z', np.pi / 2)
+        # xyz_transposed = rotated_line_points.T
+        # #
+        # # # Apply the rotation to each point
+        # xyz_rotated = rot.apply(xyz_transposed)
+        # xyz = xyz_rotated.T
+        xyz = self.xyz
         # corners = np.dot(rot.as_matrix(), corners)
         # Apply the rotation to each point
-        axis.plot(xyz[0],xyz[1], color=colors, linewidth=linewidth)
+        axis.plot(xyz[0],xyz[1], color=colors, linewidth=linewidth, label=str(self.track_id) + " " +str(round(self.xyz[0][0], 2)))
+
 
 
