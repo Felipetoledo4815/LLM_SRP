@@ -19,6 +19,11 @@ nuscenes = {
     "field_of_view": 66.4
 }
 
+open_lane_v1 = {
+    "root_folder": os.getenv("OPEN_LANE_V1"),
+    "field_of_view": 50.4
+}
+
 # Kitti training
 kitti_training = {
     "root_folder": os.getenv("KITTI"),
