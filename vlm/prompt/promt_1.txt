@@ -1,0 +1,7 @@
+||$*USER*$||\
+||$*IMAGE*$||\
+Is there a Stop Sign in the image??
+Answer no/yes.
+If yes, where is it?
+Answer distance of the sign
+||$*USER-END*$||\

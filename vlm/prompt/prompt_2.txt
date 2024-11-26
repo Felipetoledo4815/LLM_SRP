@@ -1,0 +1,45 @@
+||$*USER*$||
+### Definitions:
+1. **ego**: The vehicle holding the camera and capturing the scene (not visible in the image).
+2. **stop_sign**: Refers to a traffic control device that warns drivers to slow down and prepare to stop. It’s used when there are no other cars around, or at the end of a line of traffic. It is a red colored sign with the word STOP written in it. It has a round or octagonal shape.
+- Positional: `in_front_of`, `to_left_of`, `to_right_of`
+- Distance-based: `within_25m` (within 25 meters), `between_25m_and_40m` (between 25 and 40 meters), `between_40m_and_60m` (between 40 and 60 meters)
+
+### Instructions:
+1. Identify all stop_sign in the scene. Do not include stop_sign that are not present.
+2. For each stop_sign, generate two RELATIONSHIPS with the ego:
+- One positional RELATIONSHIP (`in_front_of`, `to_left_of`, `to_right_of`)
+- One distance-based RELATIONSHIP (`within_25m`, `between_25m_and_40m`, `between_40m_and_60m`)
+3. Use the following structured format for your output.
+4. Verify that each stop_sign is clearly visible and identifiable in the image before including it in the output.
+5. Do not include any stop_sign if it is not fully visible
+
+### Output Template:
+```
+[
+"Yes, there is a stop sign in the image. It is located near the top-left corner, has a red octagonal shape, and the word 'STOP' is written in white letters."
+...
+]
+```
+
+### Example:
+Given an image with one stop_sign on the right of EGO, the output should be:
+```
+[
+"Yes, there is a stop sign in the image. It is located on the right of EGO, has a red octagonal shape, and the word 'STOP' is written in white letters."
+]
+```
+If no stop_sign is in the scene, the output should be
+NO STOP SIGN
+
+### Important:
+- Do not include any stop_sign that are not visible in the scene.
+- Ensure that all identified stop_sign are clearly distinguishable and relevant.
+- Verify the presence and relevance of each stop_sign before including it in the output.
+
+---
+
+### Image Analysis:
+Using the above prompt format, please analyze the following image and generate the output according to the template, ensuring only visible, identifiable, and relevant objects are included:
+||$*IMAGE*$||\
+||$*USER-END*$||\

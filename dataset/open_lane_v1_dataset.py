@@ -64,9 +64,6 @@ class OpenLaneV1Dataset(DatasetInterface):
         sorted_images_path = sorted(images_path, key=lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
         sorted_labels_path = sorted(labels_path, key=lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
         sorted_lane_path = sorted(lane_path, key=lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
-        print(len(sorted_images_path))
-        print(len(sorted_labels_path))
-        print(len(sorted_lane_path))
         return sorted_images_path, sorted_labels_path, sorted_lane_path
 
     def get_image(self, index: int) -> str:
@@ -106,14 +103,16 @@ class OpenLaneV1Dataset(DatasetInterface):
 
         return not_occluded_entities
 
-    def get_lane_relation(self, entities: List[Entity], lanes):
-        self.relationship_extractor.get_all_lane_entity_relationship(entities, lanes)
-        return
+    def get_lane_relation(self, entities: List[Entity], lanes, ego: EgoVehicle):
+        return self.relationship_extractor.get_all_lane_entity_relationship(entities, lanes, ego)
 
     def get_sg_triplets(self, index: int) -> List[Tuple[str, str, str]]:
         """Returns list of scene graph triplets given an index"""
         sg_triplets = self.relationship_extractor.get_all_relationships(
             self.get_entities(index), self.get_ego_vehicle(index))
+        lanes = self.get_lane_line_pairs(self.get_lanes(index))
+        lane_relations = self.get_lane_relation(self.get_entities(index), lanes, self.get_ego_vehicle(index))
+        sg_triplets.extend(lane_relations)
         return sg_triplets
 
     def get_bb_triplets(self, index: int) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
@@ -128,9 +127,6 @@ class OpenLaneV1Dataset(DatasetInterface):
         entities = self.get_entities(index)
         image_path = self.get_image(index)
         lane_lines = self.get_lanes(index)
-        lanes = self.get_lane_line_pairs(lane_lines)
-        print(lanes[0])
-        self.get_lane_relation(entities, lanes)
         self.scene_plot.render_scene(ego_vehicle, entities, image_path, out_path, title=f"Sample {index}", lane_lines=lane_lines)
 
     def plot_bounding_box(self, index: int, bbs: List[str], entities: List[str] | None = None,
@@ -186,7 +182,7 @@ class OpenLaneV1Dataset(DatasetInterface):
                 lanes.append({
                     "left_line_of_lane": sorted_lane_line_list[idx],
                     "right_line_of_lane": sorted_lane_line_list[idx + 1],
-                    "lane_position": "left lane " + str(idx + 1)
+                    "lane_position": "left+" + str(idx + 1)
                 })
                 number_of_left_lanes += 1
 
@@ -194,7 +190,7 @@ class OpenLaneV1Dataset(DatasetInterface):
                 lanes.append({
                     "left_line_of_lane": sorted_lane_line_list[idx],
                     "right_line_of_lane": sorted_lane_line_list[idx + 1],
-                    "lane_position": "right lane " + str(idx - number_of_left_lanes)
+                    "lane_position": "right+" + str(idx - number_of_left_lanes)
                 })
 
             elif sorted_lane_line_list[idx].xyz[0][0] < 0 and sorted_lane_line_list[idx + 1].xyz[0][0] > 0:
@@ -209,7 +205,7 @@ class OpenLaneV1Dataset(DatasetInterface):
 
         for item in lanes:
             if "left lane " in item["lane_position"]:
-                item["lane_position"] = "left lane " + str(number_of_left_lanes)
+                item["lane_position"] = "left+" + str(number_of_left_lanes)
                 number_of_left_lanes -= 1
 
         for item in lanes:
@@ -218,9 +214,9 @@ class OpenLaneV1Dataset(DatasetInterface):
                 item["left_line_of_lane"] = item["right_line_of_lane"]
                 item["right_line_of_lane"] = temp
 
-        for item in lanes:
-            print(f"Lane position {item['lane_position']}, x coordinate left {item['left_line_of_lane'].xyz[0][0]}, "
-                  f"x coordinate right {item['right_line_of_lane'].xyz[0][0]}, left attribute {item['left_line_of_lane'].attribute}, right attribute {item['right_line_of_lane'].attribute}")
+        # for item in lanes:
+        #     print(f"Lane position {item['lane_position']}, x coordinate left {item['left_line_of_lane'].xyz[0][0]}, "
+        #           f"x coordinate right {item['right_line_of_lane'].xyz[0][0]}, left attribute {item['left_line_of_lane'].attribute}, right attribute {item['right_line_of_lane'].attribute}")
 
         return lanes
 
@@ -261,9 +257,9 @@ class OpenLaneV1Dataset(DatasetInterface):
             lane_lines.append(lane_line)
 
         # Sort the LaneLine objects by the x-coordinate of their first point
-        print(f"number of lane line {len(lane_lines)}")
+        # print(f"number of lane line {len(lane_lines)}")
         merged_line = self.merge_lane_lines_by_attributes(lane_lines)
-        print(f"number of merged lane line {len(merged_line)}")
+        # print(f"number of merged lane line {len(merged_line)}")
         sorted_lane_lines = sorted(merged_line, key=lambda line: line.xyz[0, 0])
 
         # # Print the category and tracking ID of the sorted objects

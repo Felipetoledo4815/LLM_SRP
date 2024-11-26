@@ -42,25 +42,36 @@ class RelationshipExtractor:
 
         return True
 
-    def get_lanes_on_opposing_lane(self, entities, left_most_line):
+    def get_lanes_on_opposing_lane(self, entities, left_most_line, ego_vehicle: EgoVehicle):
+        opposing_lane_relation = []
         for entity in entities:
             center_point = entity.get_projected_center_point()
             if self.is_point_left_of_line_segments(left_most_line, center_point):
-                print(f"{entity.entity_type} is in Opposing lane")
+                # print(f"{entity.entity_type} is in Opposing lane")
+                opposing_lane_relation.append((entity.entity_type, 'is in Opposite lane', ego_vehicle.entity_type))
+        return opposing_lane_relation
 
-    def get_all_lane_entity_relationship(self, entities: List[Entity], lanes):
+
+
+    def get_all_lane_entity_relationship(self, entities: List[Entity], lanes, ego_vehicle: EgoVehicle):
+        lane_entity_relation = []
         entities_not_in_lane = []
         for entity in entities:
             center_point = entity.get_projected_center_point()
             for lane in lanes:
                 if (self.is_point_right_of_line_segments(lane['left_line_of_lane'].xyz, center_point) and
                         self.is_point_left_of_line_segments(lane['right_line_of_lane'].xyz, center_point)):
-                    print(f"{entity.entity_type} is in lane {lane['lane_position']}")
+                    # print(f"{entity.entity_type} is in lane {lane['lane_position']}")
+                    lane_entity_relation.append((entity.entity_type, 'is in lane ' +lane['lane_position'], ego_vehicle.entity_type))
                     break
             entities_not_in_lane.append(entity)
 
         if len(entities_not_in_lane) > 0:
-            self.get_lanes_on_opposing_lane(entities_not_in_lane, lanes[0]['left_line_of_lane'].xyz)
+            opposing_lane_relation = self.get_lanes_on_opposing_lane(entities_not_in_lane, lanes[0]['left_line_of_lane'].xyz, ego_vehicle)
+            if len(opposing_lane_relation) > 0:
+                lane_entity_relation.extend(opposing_lane_relation)
+        return lane_entity_relation
+            
 
 
 
