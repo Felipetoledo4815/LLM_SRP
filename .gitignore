@@ -176,3 +176,7 @@ waymo-od
 .idea
 hf_llm_srp
 slurm_output
+
+dboutput/
+vlm/data/
+models
