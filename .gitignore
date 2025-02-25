@@ -169,6 +169,7 @@ output.png
 .vscode/
 .env
 .llm_srp
+.monitor
 nuscenes-devkit
 path/
 local_dev
@@ -176,3 +177,7 @@ waymo-od
 .idea
 hf_llm_srp
 slurm_output
+results*
+monitor/labels
+monitor/train_metrics.json
+monitor/val_metrics.json

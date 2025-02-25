@@ -17,7 +17,7 @@ conda create -n llm_srp python=3.10
 ```
 3. Activate the conda environment:
 ```bash
-conda activate llm_srp
+conda activate .llm_srp/
 ```
 4. Install all packages in the requirements.txt file:
 ```bash
