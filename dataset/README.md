@@ -1,10 +1,10 @@
 # Download datasets
 
 ## NuScenes
-Download Nuscenes from https://www.nuscenes.org/nuscenes. You will need to create an account. To get started just download the mini partition and set it up by following: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/tutorials/nuscenes_tutorial.ipynb.
+Download Nuscenes from [https://www.nuscenes.org/nuscenes](https://www.nuscenes.org/nuscenes). You will need to create an account. To get started just download the mini partition and set it up by following: [https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/tutorials/nuscenes_tutorial.ipynb](https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/tutorials/nuscenes_tutorial.ipynb).
 
 ## Waymo
-Download Waymo v1.4.3 from https://waymo.com/open/download/. You will need to create an account. Waymo version 1.4.3 is the latest version with tfrecords files. The reason why we are using this version and not version 2.0.1 with .parket files is twofold: 1) there is more documnetation on how to use this version of the API, and 2) files are easier to work with.
+Download Waymo v1.4.3 from [https://waymo.com/open/download/](https://waymo.com/open/download/). You will need to create an account. Waymo version 1.4.3 is the latest version with tfrecords files. The reason why we are using this version and not version 2.0.1 with .parket files is twofold: 1) there is more documnetation on how to use this version of the API, and 2) files are easier to work with.
 
 To get started, you can download just one of the tfrecords files from [here](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_4_3/individual_files/training?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&authuser=1). After downloading it, you will need to execute the following command to split the tfrecords file into separated images and labels.
 
