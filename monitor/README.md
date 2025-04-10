@@ -14,7 +14,7 @@ python downloader.py
 ```
 4. To execute the monitor execute:
 ```bash
-python run.py
+python monitor_script.py
 ```
 5. To analyze the results you can execute the python notebook `./monitor/analyze_results.ipynb`.
 **NOTE** that you will not be able to print the waymo images in the last section unless you have downloaded the waymo dataset. 
